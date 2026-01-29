@@ -21,21 +21,21 @@ import Image from "next/image";
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
 import { PreviewUpgradeCard } from "../direct/components/preview-upgrade-card";
 
-type SearchedProfile = {
+type PerfilBuscado = {
   username: string;
   full_name: string;
   is_private: boolean;
   profile_pic_url: string;
 };
 
-type PublicProfile = {
+type PerfilPublico = {
   username: string;
   full_name: string;
   profile_pic_url: string;
   is_verified: boolean;
 };
 
-type BasicUser = {
+type UsuarioBasico = {
   username: string;
   full_name: string;
   profile_pic_url: string;
@@ -54,20 +54,20 @@ type Post = {
 };
 
 type PostItem = {
-  from_user: BasicUser;
+  de_usuario: UsuarioBasico;
   post: Post;
 };
 
 type InstagramFeedUpstream = {
-  searched_profile: SearchedProfile;
-  source: string;
-  source_api: string;
-  profiles_in_list: number;
-  public_profiles: number;
-  public_profiles_list: PublicProfile[];
+  perfil_buscado: PerfilBuscado;
+  fonte: string;
+  fonte_api: string;
+  perfis_na_lista: number;
+  perfis_publicos: number;
+  lista_perfis_publicos: PerfilPublico[];
   posts: PostItem[];
   total_posts: number;
-  duration_ms: number;
+  duracao_ms: number;
 };
 
 function proxyImage(url?: string | null) {
@@ -224,8 +224,8 @@ export default function FeedClient() {
   const [paywallDesc, setPaywallDesc] = useState<string | undefined>(undefined);
 
   const openPaywall = useCallback((ctx: string) => {
-    setPaywallTitle("Action blocked");
-    setPaywallDesc(`To unlock "${ctx}", VIP access is required.`);
+    setPaywallTitle("Action Blocked");
+    setPaywallDesc(`To unlock"${ctx}", you need VIP access.`);
     setPaywallOpen(true);
   }, []);
 
@@ -289,9 +289,9 @@ export default function FeedClient() {
 
   useEffect(() => {
     if (loading) return;
-    if (!data?.searched_profile?.username) return;
+    if (!data?.perfil_buscado?.username) return;
 
-    const key = `stalkeaFeedPushShown:${data.searched_profile.username}`;
+    const key = `stalkeaFeedPushShown:${data.perfil_buscado.username}`;
     const already = sessionStorage.getItem(key);
     if (already) return;
 
@@ -341,8 +341,8 @@ export default function FeedClient() {
     );
   }
 
-  const userProfile = data.searched_profile;
-  const stories = data.public_profiles_list ?? [];
+  const userProfile = data.perfil_buscado;
+  const stories = data.lista_perfis_publicos ?? [];
   const posts = data.posts ?? [];
   const storyLimit = 19;
 
@@ -359,7 +359,7 @@ export default function FeedClient() {
 
         <FeedNotificationToast
           open={notifOpen}
-          title="James Williams"
+          title="James Wiliams"
           message="Sent you a message · tap to view"
           avatarSrc="/avatar/avatar-depoimento-1.jpg"
           onClose={() => setNotifOpen(false)}
@@ -380,7 +380,7 @@ export default function FeedClient() {
             </div>
             <button
               type="button"
-              onClick={() => openPaywall("switch account")}
+              onClick={() => openPaywall("trocar conta")}
               className="opacity-90 hover:opacity-100 transition cursor-pointer"
             >
               <ChevronDown className="w-4 h-4 mt-1" />
@@ -390,7 +390,7 @@ export default function FeedClient() {
           <div className="flex items-center gap-5">
             <button
               type="button"
-              onClick={() => openPaywall("like (header)")}
+              onClick={() => openPaywall("curtir (header)")}
               className="relative cursor-pointer hover:opacity-80 transition"
             >
               <Heart className="w-7 h-7" />
@@ -419,7 +419,7 @@ export default function FeedClient() {
             <div className="flex overflow-x-auto gap-4 px-4 scrollbar-hide pb-2">
               <button
                 type="button"
-                onClick={() => openPaywall("view your story")}
+                onClick={() => openPaywall("ver seu story")}
                 className="flex flex-col items-center gap-1.5 min-w-[72px] cursor-pointer hover:opacity-90 transition"
               >
                 <div className="relative">
@@ -447,7 +447,7 @@ export default function FeedClient() {
                 <button
                   key={s.username}
                   type="button"
-                  onClick={() => openPaywall(`view ${s.username}'s story`)}
+                  onClick={() => openPaywall(`ver story de ${s.username}`)}
                   className="flex flex-col items-center gap-1.5 min-w-[72px] cursor-pointer hover:opacity-90 transition"
                 >
                   <div className="bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px] rounded-full">
@@ -491,7 +491,7 @@ export default function FeedClient() {
                       type="button"
                       onClick={() =>
                         openPaywall(
-                          `open profile ${postItem.from_user.username}`,
+                          `abrir perfil ${postItem.de_usuario.username}`,
                         )
                       }
                       className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition"
@@ -499,9 +499,11 @@ export default function FeedClient() {
                       <div className="bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px] rounded-full">
                         <div className="bg-black p-[2px] rounded-full">
                           <img
-                            src={proxyImage(postItem.from_user.profile_pic_url)}
+                            src={proxyImage(
+                              postItem.de_usuario.profile_pic_url,
+                            )}
                             className="w-8 h-8 rounded-full object-cover"
-                            alt={postItem.from_user.username}
+                            alt={postItem.de_usuario.username}
                             onError={(e) =>
                               ((e.target as HTMLImageElement).src =
                                 "/placeholder-avatar.png")
@@ -510,13 +512,13 @@ export default function FeedClient() {
                         </div>
                       </div>
                       <span className="text-xs font-semibold">
-                        {postItem.from_user.username}
+                        {postItem.de_usuario.username}
                       </span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => openPaywall("more post options")}
+                      onClick={() => openPaywall("mais opções do post")}
                       className="hover:opacity-80 transition cursor-pointer"
                     >
                       <MoreHorizontal className="w-5 h-5" />
@@ -525,7 +527,7 @@ export default function FeedClient() {
 
                   <button
                     type="button"
-                    onClick={() => openPaywall("view post media")}
+                    onClick={() => openPaywall("ver mídia do post")}
                     className="w-full bg-zinc-900 aspect-square relative cursor-pointer"
                   >
                     {postItem.post.image_url ? (
@@ -537,7 +539,7 @@ export default function FeedClient() {
                         onError={(e) => (
                           ((e.target as HTMLImageElement).style.display =
                             "none"),
-                          openPaywall("unavailable media")
+                          openPaywall("mídia indisponível")
                         )}
                       />
                     ) : (
@@ -551,7 +553,7 @@ export default function FeedClient() {
                     <div className="flex items-center gap-4">
                       <button
                         type="button"
-                        onClick={() => openPaywall("like")}
+                        onClick={() => openPaywall("curtir")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Heart className="w-6 h-6 hover:text-gray-400 transition" />
@@ -559,7 +561,7 @@ export default function FeedClient() {
 
                       <button
                         type="button"
-                        onClick={() => openPaywall("comment")}
+                        onClick={() => openPaywall("comentar")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <MessageCircle className="w-6 h-6 -rotate-90 hover:text-gray-400 transition" />
@@ -567,7 +569,7 @@ export default function FeedClient() {
 
                       <button
                         type="button"
-                        onClick={() => openPaywall("send")}
+                        onClick={() => openPaywall("enviar")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Send className="w-6 h-6 hover:text-gray-400 transition" />
@@ -576,7 +578,7 @@ export default function FeedClient() {
 
                     <button
                       type="button"
-                      onClick={() => openPaywall("save")}
+                      onClick={() => openPaywall("salvar")}
                       className="hover:opacity-80 transition cursor-pointer"
                     >
                       <Bookmark className="w-6 h-6 hover:text-gray-400 transition" />
@@ -592,7 +594,7 @@ export default function FeedClient() {
 
                     <div className="text-sm">
                       <span className="font-semibold mr-1">
-                        {postItem.from_user.username}
+                        {postItem.de_usuario.username}
                       </span>
                       <span className="text-gray-100">
                         {tokens.map((t, idx) => {
@@ -617,7 +619,7 @@ export default function FeedClient() {
             })}
           </main>
         </div>
-        {/* Fixed upgrade card above navbar */}
+        {/* Upgrade card fixo acima da navbar */}
         <div className="fixed left-1/2 -translate-x-1/2 bottom-[72px] w-full max-w-[550px] z-[90] px-4 pointer-events-none">
           <div className="pointer-events-auto">
             <PreviewUpgradeCard
@@ -637,7 +639,7 @@ export default function FeedClient() {
           </button>
           <button
             type="button"
-            onClick={() => openPaywall("search")}
+            onClick={() => openPaywall("buscar")}
             className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
           >
             <Search className="w-7 h-7" />
@@ -667,7 +669,7 @@ export default function FeedClient() {
 
           <button
             type="button"
-            onClick={() => openPaywall("profile")}
+            onClick={() => openPaywall("perfil")}
             className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
           >
             <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-500">
