@@ -151,7 +151,7 @@ export default function HomeClient() {
     setError(null);
 
     if (!okToSearch) {
-      router.push("/plans");
+      router.push("/cta");
       return;
     }
 

@@ -142,7 +142,7 @@ export default function LoginPage() {
                               {...field}
                               inputMode="email"
                               className="h-12 border-white/10 bg-white/5 pl-10 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
-                              placeholder="seuemail@email.com"
+                              placeholder="youremail@email.com"
                             />
                           </div>
                         </FormControl>
@@ -156,7 +156,9 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white/80">Senha</FormLabel>
+                        <FormLabel className="text-white/80">
+                          Password
+                        </FormLabel>
                         <FormControl>
                           <div className="relative">
                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/45">
@@ -167,7 +169,7 @@ export default function LoginPage() {
                               {...field}
                               type={showPw ? "text" : "password"}
                               className="h-12 border-white/10 bg-white/5 pl-10 pr-11 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
-                              placeholder="Sua senha"
+                              placeholder="tour password"
                             />
 
                             <button
@@ -175,7 +177,7 @@ export default function LoginPage() {
                               onClick={() => setShowPw((v) => !v)}
                               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-white/55 hover:text-white/80"
                               aria-label={
-                                showPw ? "Ocultar senha" : "Mostrar senha"
+                                showPw ? "hide password" : "show password"
                               }
                             >
                               {showPw ? (
@@ -203,7 +205,7 @@ export default function LoginPage() {
                     className="h-12 w-full rounded-xl bg-linear-to-r from-[#7C4DFF] to-[#9A6CFF] text-sm font-extrabold shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95 disabled:opacity-40"
                   >
                     <LogIn className="mr-2 h-4 w-4" />
-                    {pending ? "Entrando..." : "Entrar"}
+                    {pending ? "Looading..." : "Login"}
                   </Button>
 
                   <p className="text-center text-xs text-white/55">

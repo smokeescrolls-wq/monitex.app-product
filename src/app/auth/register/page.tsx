@@ -33,8 +33,8 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const title = "Crie sua Conta";
-  const subtitle = "Preencha seus dados para começar";
+  const title = "Create your a account";
+  const subtitle = "Fill in your details to get started.";
 
   const titleCount = useTypewriter(title.length, {
     startDelayMs: 220,
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-white/80">
-                          Nome Completo
+                          Full Name
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
@@ -179,7 +179,7 @@ export default function RegisterPage() {
                               {...field}
                               inputMode="email"
                               className="h-12 border-white/10 bg-white/5 pl-10 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
-                              placeholder="seuemail@email.com"
+                              placeholder="youremail@email.com"
                             />
                           </div>
                         </FormControl>
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                               {...field}
                               inputMode="email"
                               className="h-12 border-white/10 bg-white/5 pl-10 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
-                              placeholder="confirme seu e-mail"
+                              placeholder="Confirm your email"
                             />
                           </div>
                         </FormControl>
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                               {...field}
                               type={showPw ? "text" : "password"}
                               className="h-12 border-white/10 bg-white/5 pl-10 pr-11 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
-                              placeholder="Crie uma senha forte"
+                              placeholder="Create a strong password"
                             />
 
                             <button
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                               onClick={() => setShowPw((v) => !v)}
                               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-white/55 hover:text-white/80"
                               aria-label={
-                                showPw ? "Ocultar senha" : "Mostrar senha"
+                                showPw ? "hide password" : "show password"
                               }
                             >
                               {showPw ? (
@@ -265,16 +265,16 @@ export default function RegisterPage() {
                     disabled={!canSubmit}
                     className="h-12 w-full rounded-xl bg-linear-to-r from-[#7C4DFF] to-[#9A6CFF] text-sm font-extrabold shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95 disabled:opacity-40"
                   >
-                    {pending ? "Criando..." : "Criar Conta"}
+                    {pending ? "Create..." : "Create account"}
                   </Button>
 
                   <p className="text-center text-xs text-white/55">
-                    Já tem uma conta?{" "}
+                    Do you already have an account?{" "}
                     <Link
                       href="/auth/login"
                       className="font-bold text-violet-300 hover:text-violet-200"
                     >
-                      Entrar
+                      Login
                     </Link>
                   </p>
                 </form>
