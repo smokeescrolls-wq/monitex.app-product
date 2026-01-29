@@ -14,6 +14,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type CreditsActionsLike = {
+  spendCredits?: (amount: number) => boolean | { ok: boolean };
+  consumeCredits?: (amount: number) => boolean | { ok: boolean };
+  decrementCredits?: (amount: number) => boolean | { ok: boolean };
+  useCredits?: (amount: number) => boolean | { ok: boolean };
+};
+
+function toOk(v: unknown) {
+  if (typeof v === "boolean") return v;
+  if (v && typeof v === "object" && "ok" in (v as any))
+    return Boolean((v as any).ok);
+  return false;
+}
+
 export function ServiceLaunchDialog({
   open,
   onOpenChange,
@@ -25,7 +39,8 @@ export function ServiceLaunchDialog({
 }) {
   const router = useRouter();
   const credits = useCreditsStore((s) => s.credits);
-  const spendCredits = useCreditsStore((s) => s.spendCredits);
+
+  const actions = useCreditsStore((s) => s as unknown as CreditsActionsLike);
 
   const [target, setTarget] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -35,6 +50,19 @@ export function ServiceLaunchDialog({
     if (service.startCostCredits === 0) return true;
     return credits >= service.startCostCredits;
   }, [credits, service.startCostCredits]);
+
+  function debitIfPossible(amount: number) {
+    const fn =
+      actions.spendCredits ??
+      actions.consumeCredits ??
+      actions.decrementCredits ??
+      actions.useCredits;
+
+    if (!fn) return { ok: true, debited: false };
+
+    const r = fn(amount);
+    return { ok: toOk(r), debited: true };
+  }
 
   function start() {
     setErr(null);
@@ -46,7 +74,12 @@ export function ServiceLaunchDialog({
     }
 
     if (service.startCostCredits > 0) {
-      const ok = spendCredits(service.startCostCredits);
+      if (credits < service.startCostCredits) {
+        setErr("Créditos insuficientes para iniciar.");
+        return;
+      }
+
+      const { ok } = debitIfPossible(service.startCostCredits);
       if (!ok) {
         setErr("Créditos insuficientes para iniciar.");
         return;
@@ -74,10 +107,12 @@ export function ServiceLaunchDialog({
             <div className="text-sm font-semibold text-white/85">
               Configurar simulação
             </div>
+
             <div className="mt-3 grid gap-2">
               <Label className="text-xs text-white/70">
                 {service.target.label}
               </Label>
+
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/45">
                   @
@@ -89,6 +124,7 @@ export function ServiceLaunchDialog({
                   className="h-11 border-white/10 bg-white/5 pl-8 text-white placeholder:text-white/35"
                 />
               </div>
+
               {err ? <p className="text-xs text-red-400">{err}</p> : null}
             </div>
 
@@ -97,6 +133,7 @@ export function ServiceLaunchDialog({
                 {service.options.map((o) => (
                   <div key={o.id} className="grid gap-2">
                     <Label className="text-xs text-white/70">{o.label}</Label>
+
                     <div className="flex flex-wrap gap-2">
                       {o.values.map((v) => {
                         const active = opts[o.id] === v.value;
