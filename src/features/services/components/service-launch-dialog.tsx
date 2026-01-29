@@ -97,7 +97,7 @@ export function ServiceLaunchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px] border-white/10 bg-[#0b0b0f] text-white">
+      <DialogContent className="max-w-130 border-white/10 bg-[#0b0b0f] text-white">
         <DialogHeader>
           <DialogTitle className="text-white">{service.title}</DialogTitle>
         </DialogHeader>
