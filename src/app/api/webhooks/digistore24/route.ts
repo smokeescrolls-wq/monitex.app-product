@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/server/db/prisma";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+
 function normalize(v: FormDataEntryValue | null) {
   if (v == null) return "";
   return typeof v === "string" ? v : "";
