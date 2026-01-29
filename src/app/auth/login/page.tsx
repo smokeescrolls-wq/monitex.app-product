@@ -30,7 +30,7 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const title = "Entre no Stalkea.ai";
+  const title = "Entre no Monitex.ai";
   const subtitle = "Entre com sua conta para continuar";
 
   const titleCount = useTypewriter(title.length, {

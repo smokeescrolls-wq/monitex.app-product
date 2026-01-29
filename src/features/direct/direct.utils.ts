@@ -34,13 +34,13 @@ export type ChatMessage =
       locked: boolean;
       durationLabel: string;
     };
-
-export function proxyImage(url: string) {
-  if (!url) return "";
+export function proxyImage(url?: string | null) {
+  if (!url) return "/placeholder-avatar.png";
   if (url.startsWith("/api/image-proxy?url=")) return url;
   if (url.startsWith("/")) return url;
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
+
 
 function mask(username: string) {
   const head = username.slice(0, 2);

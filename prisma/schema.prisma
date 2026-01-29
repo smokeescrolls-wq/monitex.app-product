@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String        @id @default(cuid())
+  email     String        @unique
+  password  String
+  name      String?
+  credits   CreditWallet?
+  purchases Purchase[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model CreditWallet {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  balance   Int            @default(0)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger    CreditLedger[]
+  updatedAt DateTime       @updatedAt
+}
+
+model CreditLedger {
+  id        String       @id @default(cuid())
+  walletId  String
+  delta     Int
+  reason    String
+  meta      Json?
+  wallet    CreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+}
+
+model Plan {
+  id         String     @id @default(cuid())
+  code       String     @unique
+  name       String
+  priceCents Int
+  currency   String     @default("BRL")
+  credits    Int
+  active     Boolean    @default(true)
+  purchases  Purchase[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  userId      String?
+  planId      String?
+  provider    String   @default("digistore24")
+  eventId     String?  @unique
+  orderId     String?
+  status      String
+  amountCents Int?
+  currency    String?
+  raw         Json?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  plan Plan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+}

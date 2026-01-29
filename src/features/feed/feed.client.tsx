@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Heart,
@@ -17,6 +17,9 @@ import {
 import { instagramUsernameSchema } from "@/features/instagram/instagram.schemas";
 import { tokenizeCaption } from "@/features/instagram/modules/instagram-format.modules";
 import Image from "next/image";
+
+import { PaywallModal } from "@/features/direct/components/paywall-modal";
+import { PreviewUpgradeCard } from "../direct/components/preview-upgrade-card";
 
 type PerfilBuscado = {
   username: string;
@@ -67,7 +70,7 @@ type InstagramFeedUpstream = {
   duracao_ms: number;
 };
 
-function proxyImage(url: string) {
+function proxyImage(url?: string | null) {
   if (!url) return "/placeholder-avatar.png";
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
@@ -90,7 +93,6 @@ function playNotificationBeep() {
     if (!AudioCtx) return;
 
     const ctx = new AudioCtx();
-
     const o = ctx.createOscillator();
     const g = ctx.createGain();
 
@@ -124,7 +126,6 @@ function FeedNotificationToast(props: {
   onClick?: () => void;
 }) {
   const { open, title, message, avatarSrc, onClose, onClick } = props;
-
   if (!open) return null;
 
   return (
@@ -172,7 +173,7 @@ function FeedNotificationToast(props: {
                 e.stopPropagation();
                 onClose();
               }}
-              className="text-white/45 hover:text-white/70 text-[12px]"
+              className="text-white/45 hover:text-white/70 text-[12px] cursor-pointer"
             >
               Close
             </button>
@@ -207,13 +208,33 @@ export default function FeedClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<InstagramFeedUpstream | null>(null);
-
   const [notifOpen, setNotifOpen] = useState(false);
 
   const username = useMemo(() => {
     const parsed = instagramUsernameSchema.safeParse(usernameRaw);
     return parsed.success ? parsed.data : "";
   }, [usernameRaw]);
+
+  const CTA_URL = "/cta";
+
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallTitle, setPaywallTitle] = useState<string | undefined>(
+    undefined,
+  );
+  const [paywallDesc, setPaywallDesc] = useState<string | undefined>(undefined);
+
+  const openPaywall = useCallback((ctx: string) => {
+    setPaywallTitle("Ação bloqueada");
+    setPaywallDesc(`Para liberar "${ctx}", é necessário ter acesso VIP.`);
+    setPaywallOpen(true);
+  }, []);
+
+  const closePaywall = useCallback(() => setPaywallOpen(false), []);
+
+  const goVip = useCallback(() => {
+    setPaywallOpen(false);
+    router.push(CTA_URL);
+  }, [router]);
 
   useEffect(() => {
     if (!username) {
@@ -279,22 +300,11 @@ export default function FeedClient() {
     const showId = window.setTimeout(() => {
       setNotifOpen(true);
       playNotificationBeep();
-
       window.setTimeout(() => setNotifOpen(false), 3200);
     }, 5000);
 
     return () => window.clearTimeout(showId);
   }, [loading, data]);
-
-  const handleLikeClick = (postId: string) =>
-    console.log(`Curtir post ${postId}`);
-  const handleCommentClick = (postId: string) =>
-    console.log(`Comentar no post ${postId}`);
-  const handleShareClick = (postId: string) =>
-    console.log(`Compartilhar post ${postId}`);
-  const handleSaveClick = (postId: string) =>
-    console.log(`Salvar post ${postId}`);
-  const handleStoryClick = (u: string) => console.log(`Abrir story de ${u}`);
 
   if (loading) {
     return (
@@ -315,12 +325,13 @@ export default function FeedClient() {
           <div className="h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
             <p className="text-white/80">{error ?? "Error."}</p>
             <button
+              type="button"
               onClick={() =>
                 router.push(
                   `/instagram-login?username=${encodeURIComponent(usernameRaw)}`,
                 )
               }
-              className="px-4 py-3 rounded-xl bg-[#584cea] hover:bg-[#4a3fcb] text-white font-semibold text-sm"
+              className="px-4 py-3 rounded-xl bg-[#584cea] hover:bg-[#4a3fcb] text-white font-semibold text-sm cursor-pointer"
             >
               Back
             </button>
@@ -338,17 +349,21 @@ export default function FeedClient() {
   return (
     <div className="min-h-screen bg-black text-white flex justify-center px-6">
       <div className="w-full max-w-[550px] border-x border-gray-800 shadow-2xl relative bg-black overflow-hidden">
+        <PaywallModal
+          open={paywallOpen}
+          onClose={closePaywall}
+          onGoVip={goVip}
+          title={paywallTitle}
+          description={paywallDesc}
+        />
+
         <FeedNotificationToast
           open={notifOpen}
           title="James Wiliams"
           message="Sent you a message · tap to view"
           avatarSrc="/avatar/avatar-depoimento-1.jpg"
           onClose={() => setNotifOpen(false)}
-          onClick={() =>
-            router.push(
-              `/direct?username=${encodeURIComponent(userProfile.username)}`,
-            )
-          }
+          onClick={() => openPaywall("notification")}
         />
 
         <header className="flex justify-between items-center px-4 py-3 bg-black z-50 shrink-0 border-b border-gray-800/40">
@@ -363,24 +378,33 @@ export default function FeedClient() {
                 unoptimized
               />
             </div>
-            <button className="opacity-90 hover:opacity-100 transition">
+            <button
+              type="button"
+              onClick={() => openPaywall("trocar conta")}
+              className="opacity-90 hover:opacity-100 transition cursor-pointer"
+            >
               <ChevronDown className="w-4 h-4 mt-1" />
             </button>
           </div>
 
           <div className="flex items-center gap-5">
-            <button className="relative cursor-pointer hover:opacity-80 transition">
+            <button
+              type="button"
+              onClick={() => openPaywall("curtir (header)")}
+              className="relative cursor-pointer hover:opacity-80 transition"
+            >
               <Heart className="w-7 h-7" />
               <span className="absolute top-0 right-0 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-black" />
             </button>
 
             <button
+              type="button"
               onClick={() =>
                 router.push(
                   `/direct?username=${encodeURIComponent(userProfile.username)}`,
                 )
               }
-              className="relative cursor-pointer hover:opacity-80 transition"
+              className="relative hover:opacity-80 transition cursor-pointer"
             >
               <Send className="w-7 h-7" />
               <span className="absolute -top-1 -right-1 bg-red-600 text-[10px] font-bold px-1 h-3.5 min-w-[14px] flex items-center justify-center rounded-full border border-black">
@@ -394,7 +418,8 @@ export default function FeedClient() {
           <div className="pt-2 pb-4 border-b border-gray-800/40">
             <div className="flex overflow-x-auto gap-4 px-4 scrollbar-hide pb-2">
               <button
-                onClick={() => handleStoryClick(userProfile.username)}
+                type="button"
+                onClick={() => openPaywall("ver seu story")}
                 className="flex flex-col items-center gap-1.5 min-w-[72px] cursor-pointer hover:opacity-90 transition"
               >
                 <div className="relative">
@@ -403,6 +428,10 @@ export default function FeedClient() {
                       src={proxyImage(userProfile.profile_pic_url)}
                       className="w-full h-full rounded-full object-cover border border-gray-800"
                       alt="Your story"
+                      onError={(e) =>
+                        ((e.target as HTMLImageElement).src =
+                          "/placeholder-avatar.png")
+                      }
                     />
                   </div>
                   <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-black">
@@ -417,8 +446,9 @@ export default function FeedClient() {
               {stories.slice(0, storyLimit).map((s) => (
                 <button
                   key={s.username}
-                  onClick={() => handleStoryClick(s.username)}
-                  className="flex flex-col items-center gap-1.5 min-w-[72px] hover:opacity-90 transition"
+                  type="button"
+                  onClick={() => openPaywall(`ver story de ${s.username}`)}
+                  className="flex flex-col items-center gap-1.5 min-w-[72px] cursor-pointer hover:opacity-90 transition"
                 >
                   <div className="bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px] rounded-full">
                     <div className="bg-black p-[2px] rounded-full">
@@ -457,7 +487,15 @@ export default function FeedClient() {
                   className="flex flex-col mb-4 border-b border-gray-900 pb-2"
                 >
                   <div className="flex items-center justify-between px-3 py-2">
-                    <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openPaywall(
+                          `abrir perfil ${postItem.de_usuario.username}`,
+                        )
+                      }
+                      className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition"
+                    >
                       <div className="bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px] rounded-full">
                         <div className="bg-black p-[2px] rounded-full">
                           <img
@@ -476,55 +514,72 @@ export default function FeedClient() {
                       <span className="text-xs font-semibold">
                         {postItem.de_usuario.username}
                       </span>
-                    </div>
-                    <button className="hover:opacity-80 transition">
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => openPaywall("mais opções do post")}
+                      className="hover:opacity-80 transition cursor-pointer"
+                    >
                       <MoreHorizontal className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <div className="w-full bg-zinc-900 aspect-square relative">
+                  <button
+                    type="button"
+                    onClick={() => openPaywall("ver mídia do post")}
+                    className="w-full bg-zinc-900 aspect-square relative cursor-pointer"
+                  >
                     {postItem.post.image_url ? (
                       <img
                         src={proxyImage(postItem.post.image_url)}
                         className="w-full h-full object-cover"
                         alt=""
                         loading="lazy"
-                        onError={(e) =>
+                        onError={(e) => (
                           ((e.target as HTMLImageElement).style.display =
-                            "none")
-                        }
+                            "none"),
+                          openPaywall("mídia indisponível")
+                        )}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white/30 text-sm">
                         No image
                       </div>
                     )}
-                  </div>
+                  </button>
 
                   <div className="px-3 pt-3 flex justify-between items-center mb-2">
                     <div className="flex items-center gap-4">
                       <button
-                        onClick={() => handleLikeClick(postItem.post.id)}
-                        className="hover:opacity-80 transition"
+                        type="button"
+                        onClick={() => openPaywall("curtir")}
+                        className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Heart className="w-6 h-6 hover:text-gray-400 transition" />
                       </button>
+
                       <button
-                        onClick={() => handleCommentClick(postItem.post.id)}
-                        className="hover:opacity-80 transition"
+                        type="button"
+                        onClick={() => openPaywall("comentar")}
+                        className="hover:opacity-80 transition cursor-pointer"
                       >
                         <MessageCircle className="w-6 h-6 -rotate-90 hover:text-gray-400 transition" />
                       </button>
+
                       <button
-                        onClick={() => handleShareClick(postItem.post.id)}
-                        className="hover:opacity-80 transition"
+                        type="button"
+                        onClick={() => openPaywall("enviar")}
+                        className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Send className="w-6 h-6 hover:text-gray-400 transition" />
                       </button>
                     </div>
+
                     <button
-                      onClick={() => handleSaveClick(postItem.post.id)}
-                      className="hover:opacity-80 transition"
+                      type="button"
+                      onClick={() => openPaywall("salvar")}
+                      className="hover:opacity-80 transition cursor-pointer"
                     >
                       <Bookmark className="w-6 h-6 hover:text-gray-400 transition" />
                     </button>
@@ -564,31 +619,47 @@ export default function FeedClient() {
             })}
           </main>
         </div>
+        {/* Upgrade card fixo acima da navbar */}
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-[72px] w-full max-w-[550px] z-[90] px-4 pointer-events-none">
+          <div className="pointer-events-auto">
+            <PreviewUpgradeCard
+              onUpgrade={goVip}
+              onOpenPaywall={() => openPaywall("upgrade card")}
+            />
+          </div>
+        </div>
 
         <nav className="absolute bottom-0 left-0 w-full bg-black border-t border-gray-800 h-[65px] px-6 flex justify-between items-center z-50">
-          <button className="w-10 h-full flex items-center justify-center hover:opacity-80 transition">
+          <button
+            type="button"
+            onClick={() => openPaywall("home")}
+            className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+          >
             <Home className="w-7 h-7" />
           </button>
-          <button className="w-10 h-full flex items-center justify-center hover:opacity-80 transition">
+          <button
+            type="button"
+            onClick={() => openPaywall("buscar")}
+            className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+          >
             <Search className="w-7 h-7" />
           </button>
-          <button className="w-10 h-full flex items-center justify-center hover:opacity-80 transition">
+          <button
+            type="button"
+            onClick={() => openPaywall("reels")}
+            className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+          >
             <Clapperboard className="w-7 h-7" />
           </button>
 
           <button
-            onClick={() => {
-              try {
-                sessionStorage.setItem(
-                  "stalkeaDirectBoot",
-                  JSON.stringify(data),
-                );
-              } catch {}
+            type="button"
+            onClick={() =>
               router.push(
                 `/direct?username=${encodeURIComponent(userProfile.username)}`,
-              );
-            }}
-            className="relative hover:opacity-80 transition"
+              )
+            }
+            className="relative hover:opacity-80 transition cursor-pointer"
           >
             <Send className="w-7 h-7" />
             <span className="absolute -top-1 -right-1 bg-red-600 text-[10px] font-bold px-1 h-3.5 min-w-[14px] flex items-center justify-center rounded-full border border-black">
@@ -596,7 +667,11 @@ export default function FeedClient() {
             </span>
           </button>
 
-          <button className="w-10 h-full flex items-center justify-center hover:opacity-80 transition">
+          <button
+            type="button"
+            onClick={() => openPaywall("perfil")}
+            className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
+          >
             <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-500">
               <img
                 src={proxyImage(userProfile.profile_pic_url)}

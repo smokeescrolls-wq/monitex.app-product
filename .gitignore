@@ -7,3 +7,5 @@ out
 .env.exemple
 coverage
 playwright-report
+
+/generated/prisma

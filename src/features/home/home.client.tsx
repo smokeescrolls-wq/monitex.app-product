@@ -285,9 +285,9 @@ export default function HomeClient() {
                   type="button"
                   disabled={busy}
                   onClick={() => setStep("input")}
-                  className="mt-1 h-15 w-full cursor-pointer rounded-full bg-linear-to-r from-violet-600 to-indigo-500 text-xl font-semibold shadow-[0_18px_60px_rgba(124,58,237,0.35)] hover:opacity-95"
+                  className="group mt-1 h-15 w-full cursor-pointer rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 text-xl font-semibold shadow-[0_18px_60px_rgba(124,58,237,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(124,58,237,0.45)]"
                 >
-                  <span className="mr-2 inline-flex items-center justify-center">
+                  <span className="mr-2 inline-flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                     <EyeIconAnimated className="size-6 text-white/95" />
                   </span>
                   Spy now
@@ -329,7 +329,7 @@ export default function HomeClient() {
                   <Button
                     type="submit"
                     disabled={busy}
-                    className="h-12 w-full cursor-pointer rounded-full bg-linear-to-r from-violet-600 to-indigo-500 text-base font-semibold shadow-[0_18px_60px_rgba(124,58,237,0.35)] hover:opacity-95"
+                    className="group h-12 w-full cursor-pointer rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 text-base font-semibold shadow-[0_18px_60px_rgba(124,58,237,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(124,58,237,0.45)]"
                   >
                     {busy ? "Checking..." : "Analyze profile"}
                   </Button>

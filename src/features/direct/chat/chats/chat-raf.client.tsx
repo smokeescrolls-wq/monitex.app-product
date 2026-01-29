@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Video } from "lucide-react";
+import { ArrowLeft, Phone, Video, EyeOff, Lock } from "lucide-react";
 import type { DirectConversation } from "@/features/direct/direct.utils";
 import { proxyImage } from "@/features/direct/direct.utils";
 import { AvatarCircle } from "@/features/direct/components/avatar-circle";
+import { PaywallModal } from "@/features/direct/components/paywall-modal";
 
 type Props = { username: string; convo: DirectConversation };
 
@@ -54,10 +55,12 @@ function CallCard({
   state,
   timeLabel,
   durationLabel,
+  onClick,
 }: {
   state: "normal" | "missed" | "ended";
   timeLabel: string;
   durationLabel?: string;
+  onClick: () => void;
 }) {
   const title =
     state === "missed"
@@ -72,8 +75,16 @@ function CallCard({
 
   return (
     <div className="w-full">
-      <div className="w-[270px] max-w-[92%] rounded-2xl bg-[#1f1f22] border border-white/10 px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
+      <button
+        onClick={onClick}
+        className="w-[270px] max-w-[92%] rounded-2xl bg-[#1a1a1d] border border-white/10 px-4 py-3 text-left cursor-pointer hover:bg-[#2a2a2d] transition-colors relative group"
+        type="button"
+      >
+        <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1 z-10">
+          <Lock className="w-3 h-3 text-white/70" />
+        </div>
+
+        <div className="flex items-center justify-between gap-4 opacity-60">
           <div className="min-w-0">
             <div className="text-[13px] font-semibold text-white/90">
               {title}
@@ -103,32 +114,58 @@ function CallCard({
             <Video className="w-5 h-5 text-white/85" />
           </div>
         </div>
-      </div>
+      </button>
     </div>
   );
 }
 
-function MediaItem({ fromMe, src }: { fromMe?: boolean; src?: string }) {
+function MediaItem({
+  fromMe,
+  src,
+  onClick,
+}: {
+  fromMe?: boolean;
+  src?: string;
+  onClick: () => void;
+}) {
   const classWrap = fromMe ? "ml-auto" : "";
   const fallback = "/placeholder-avatar.png";
 
   return (
-    <div
+    <button
+      onClick={onClick}
       className={[
         "relative",
         "w-[150px] h-[210px]",
         "rounded-2xl overflow-hidden",
         "border border-white/10",
         "bg-[#0f1013]",
+        "cursor-pointer group",
         classWrap,
       ].join(" ")}
+      type="button"
     >
       <img
         src={src || fallback}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+        draggable={false}
       />
-    </div>
+
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+        <div className="bg-black/60 rounded-full p-3 mb-4 backdrop-blur-sm">
+          <EyeOff className="w-8 h-8 text-white/90" />
+        </div>
+        <div className="text-center">
+          <div className="text-[14px] text-white/90 font-semibold mb-1">
+            Locked Media
+          </div>
+          <div className="text-[12px] text-white/70">Click to view</div>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -146,12 +183,13 @@ export default function ChatRafClient({ username, convo }: Props) {
   const goBack = () =>
     router.push(`/direct?username=${encodeURIComponent(username || "user")}`);
 
+  // neutral paths
   const mediaList = useMemo(
     () => [
-      "/user-midias-fake/nudes1-chat1.jpg",
-      "/user-midias-fake/nudes1-chat2.jpg",
-      "/user-midias-fake/nudes1-chat3.jpg",
-      "/user-midias-fake/nudes1-chat-4.jpg",
+      "/user-midias-fake/locked-media-1.jpg",
+      "/user-midias-fake/locked-media-2.jpg",
+      "/user-midias-fake/locked-media-3.jpg",
+      "/user-midias-fake/locked-media-4.jpg",
     ],
     [],
   );
@@ -192,7 +230,6 @@ export default function ChatRafClient({ username, convo }: Props) {
 
     { id: "o1", kind: "otherText", text: "Look at this…" },
 
-    // mídia recebida (agora visível)
     { id: "im1", kind: "media", src: mediaList[0] },
 
     { id: "o2", kind: "otherText", text: "lol", showAvatar: false },
@@ -202,7 +239,6 @@ export default function ChatRafClient({ username, convo }: Props) {
 
     { id: "o3", kind: "otherText", text: "Send more", showAvatar: true },
 
-    // pack enviado (3 mídias visíveis)
     { id: "im2", kind: "media", fromMe: true, src: mediaList[1] },
     { id: "im3", kind: "media", fromMe: true, src: mediaList[2] },
     { id: "im4", kind: "media", fromMe: true, src: mediaList[3] },
@@ -218,7 +254,6 @@ export default function ChatRafClient({ username, convo }: Props) {
     { id: "m8", kind: "meText", text: "I need to go now" },
   ];
 
-  // seção extra antiga (agora visível normalmente)
   const oldMessages: Msg[] = [
     { id: "ot1", kind: "time", text: "1 WEEK AGO" },
     { id: "oo1", kind: "otherText", text: "Hi" },
@@ -232,25 +267,70 @@ export default function ChatRafClient({ username, convo }: Props) {
     { id: "om2", kind: "meText", text: "Sure" },
   ];
 
-  // Mostra mensagens antigas quando chega no topo
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
     const onScroll = () => {
-      if (el.scrollTop <= 90 && !extraOldVisible) {
-        setExtraOldVisible(true);
-      }
+      if (el.scrollTop <= 90 && !extraOldVisible) setExtraOldVisible(true);
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll as any);
   }, [extraOldVisible]);
 
+  // ---- PAYWALL ----
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallCtx, setPaywallCtx] = useState<string>("");
+
+  const CTA_URL = "/cta";
+
+  const openPaywall = useCallback((ctx: string) => {
+    setPaywallCtx(ctx);
+    setPaywallOpen(true);
+  }, []);
+
+  const paywallTitle = useMemo(() => {
+    if (paywallCtx === "profile") return "Profile locked";
+    if (paywallCtx === "call") return "Call locked";
+    if (paywallCtx === "video") return "Video call locked";
+    if (paywallCtx.startsWith("media:")) return "Media locked";
+    if (paywallCtx.startsWith("videocall:")) return "Call locked";
+    if (paywallCtx === "input") return "Chat locked";
+    return "Action locked";
+  }, [paywallCtx]);
+
+  const paywallDesc = useMemo(() => {
+    return "To unlock this action, VIP access is required.";
+  }, []);
+
+  const handleMediaClick = (src: string, fromMe?: boolean) => {
+    openPaywall(`media:${fromMe ? "me" : "other"}`);
+  };
+
+  const handleVideoCallClick = (
+    state: "normal" | "missed" | "ended",
+    timeLabel: string,
+  ) => {
+    openPaywall(`videocall:${state}:${timeLabel}`);
+  };
+
+  const handleProfileClick = () => openPaywall("profile");
+  const handleCallClick = () => openPaywall("call");
+  const handleVideoClick = () => openPaywall("video");
+  // -----------------
+
   return (
     <div className="min-h-screen bg-black text-white flex justify-center px-6">
       <div className="bg-black h-screen w-full max-w-112.5 flex flex-col overflow-hidden mx-auto relative shadow-2xl border-x border-gray-800">
-        {/* header igual IG */}
+        <PaywallModal
+          open={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          onGoVip={() => router.push(CTA_URL)}
+          title={paywallTitle}
+          description={paywallDesc}
+        />
+
         <header className="flex items-center justify-between px-4 py-3 bg-black z-50 shrink-0 border-b border-gray-800/40">
           <div className="flex items-center gap-3">
             <button
@@ -263,42 +343,66 @@ export default function ChatRafClient({ username, convo }: Props) {
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/10">
+              <button
+                onClick={handleProfileClick}
+                className="relative w-9 h-9 rounded-full overflow-hidden border border-white/10 cursor-pointer group"
+                type="button"
+              >
                 <AvatarCircle
                   src={avatarSrc}
                   alt=""
                   className="absolute inset-0"
-                  imgClassName="w-full h-full object-cover"
+                  imgClassName="w-full h-full object-cover blur-md"
                   blur={false}
                 />
-              </div>
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <EyeOff className="w-3.5 h-3.5 text-white/90" />
+                </div>
+              </button>
 
               <div className="leading-tight">
                 <div className="text-[14px] font-semibold">
                   {convo.maskedTitle}
                 </div>
-                <div className="text-[11px] text-white/55">Online há 6 h</div>
+                <div className="text-[11px] text-white/55">
+                  Online 6 hours ago
+                </div>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button aria-label="Call" className="cursor-pointer" type="button">
+            <button
+              onClick={handleCallClick}
+              aria-label="Call"
+              className="cursor-pointer relative group"
+              type="button"
+            >
               <Phone className="w-5.5 h-5.5" />
+              <div className="absolute -top-2 -right-2 bg-black/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Lock className="w-2.5 h-2.5 text-white/70" />
+              </div>
             </button>
-            <button aria-label="Video" className="cursor-pointer" type="button">
+
+            <button
+              onClick={handleVideoClick}
+              aria-label="Video"
+              className="cursor-pointer relative group"
+              type="button"
+            >
               <Video className="w-5.5 h-5.5" />
+              <div className="absolute -top-2 -right-2 bg-black/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Lock className="w-2.5 h-2.5 text-white/70" />
+              </div>
             </button>
           </div>
         </header>
 
-        {/* chat body */}
         <div
           ref={scrollerRef}
           className="flex-1 overflow-y-auto scrollbar-hide px-4 py-4"
         >
           <div className="flex flex-col gap-3">
-            {/* Mensagens antigas - agora visíveis normalmente */}
             {extraOldVisible &&
               oldMessages.map((m) => {
                 if (m.kind === "time")
@@ -321,6 +425,7 @@ export default function ChatRafClient({ username, convo }: Props) {
                       state={m.state}
                       timeLabel={m.timeLabel}
                       durationLabel={m.durationLabel}
+                      onClick={() => handleVideoCallClick(m.state, m.timeLabel)}
                     />
                   </div>
                 );
@@ -340,7 +445,11 @@ export default function ChatRafClient({ username, convo }: Props) {
 
               return (
                 <div key={m.id} className="flex">
-                  <MediaItem fromMe={m.fromMe} src={m.src} />
+                  <MediaItem
+                    fromMe={m.fromMe}
+                    src={m.src}
+                    onClick={() => handleMediaClick(m.src || "", m.fromMe)}
+                  />
                 </div>
               );
             })}
@@ -349,13 +458,21 @@ export default function ChatRafClient({ username, convo }: Props) {
           <div className="h-28" />
         </div>
 
-        {/* input fake */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/90 border-t border-gray-800/40">
           <button
-            className="w-full h-12 rounded-2xl bg-[#1f1f22] border border-white/10 text-white/55 text-left px-4 cursor-pointer"
+            className="w-full h-12 rounded-2xl bg-[#1f1f22] border border-white/10 text-white/55 text-left px-4 cursor-pointer relative group"
             type="button"
+            onClick={() => openPaywall("input")}
           >
             Message…
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 rounded-2xl">
+              <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5 backdrop-blur-sm">
+                <Lock className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-[12px] text-white/80">
+                  Feature locked
+                </span>
+              </div>
+            </div>
           </button>
         </div>
 

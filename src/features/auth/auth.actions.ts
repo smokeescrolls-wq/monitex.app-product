@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loginSchema, registerSchema } from "./auth.schemas";
 
@@ -8,7 +9,28 @@ type ActionState =
   | { ok: true }
   | { ok: false; message: string };
 
-export async function loginAction(_: ActionState, formData: FormData): Promise<ActionState> {
+async function getRedirectFromHeaders() {
+  const h = await headers();
+  const referer = h.get("referer") ?? "";
+
+  try {
+    const url = new URL(referer);
+    const r = url.searchParams.get("redirect");
+
+    if (!r) return null;
+    if (!r.startsWith("/")) return null;
+    if (r.startsWith("//")) return null;
+
+    return r;
+  } catch {
+    return null;
+  }
+}
+
+export async function loginAction(
+  _: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
     email: String(formData.get("email") ?? ""),
     password: String(formData.get("password") ?? ""),
@@ -29,10 +51,14 @@ export async function loginAction(_: ActionState, formData: FormData): Promise<A
     return { ok: false, message: "E-mail ou senha incorretos." };
   }
 
-  redirect("/analysis");
+  const redirectTo = (await getRedirectFromHeaders()) ?? "/dashboard";
+  redirect(redirectTo);
 }
 
-export async function registerAction(_: ActionState, formData: FormData): Promise<ActionState> {
+export async function registerAction(
+  _: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   const parsed = registerSchema.safeParse({
     fullName: String(formData.get("fullName") ?? ""),
     email: String(formData.get("email") ?? ""),

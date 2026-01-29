@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Instagram, Loader2, Zap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,15 @@ import type { ServiceKey } from "@/features/services/services.registry";
 function pct(completed: number, total: number) {
   if (total <= 0) return 0;
   return Math.min(100, Math.max(0, Math.round((completed / total) * 100)));
+}
+
+function InstagramIconGlow() {
+  return (
+    <div className="relative grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-pink-500/25 via-fuchsia-500/15 to-orange-500/10">
+      <div className="absolute inset-0 rounded-2xl shadow-[0_0_24px_rgba(236,72,153,0.20)]" />
+      <Instagram className="relative h-5 w-5 text-pink-100" />
+    </div>
+  );
 }
 
 export default function InstagramDialogContent({
@@ -64,173 +72,161 @@ export default function InstagramDialogContent({
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="space-y-4">
       {!session ? (
-        <Card className="border-white/10 bg-black/35 backdrop-blur-xl">
-          <CardContent className="p-5 sm:p-6">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5">
-                <Instagram className="h-5 w-5 text-white/85" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white/90">Instagram</p>
-                <p className="text-xs text-white/55">
-                  Analisar perfil (simulação controlada)
-                </p>
-              </div>
-              <div className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
-                Saldo: {credits} créditos
-              </div>
+        <>
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_0_28px_rgba(139,92,246,0.12)]">
+            <InstagramIconGlow />
+
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white/90">Instagram</p>
+              <p className="text-xs text-white/55">
+                Profile analysis (controlled simulation)
+              </p>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-xs font-semibold text-violet-200">
-                Como funciona:
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-white/70">
-                Informe um username para iniciar o fluxo. O avanço das etapas é
-                manual via créditos.
-              </p>
+            <div className="ml-auto rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-semibold text-white/70">
+              Balance: {credits} credits
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
+            <p className="text-xs font-semibold text-violet-200">
+              How it works
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-white/70">
+              Enter a username to start the flow. Progress is advanced manually
+              using credits.
+            </p>
+          </div>
+
+          <Input
+            value={rawTarget}
+            onChange={(e) => setRawTarget(e.target.value)}
+            placeholder={IG_FLOW.placeholder}
+            className="h-11 rounded-2xl border-white/10 bg-black/40 text-white placeholder:text-white/35"
+          />
+
+          <Button
+            onClick={onStart}
+            disabled={!canStart}
+            className="h-11 w-full rounded-2xl bg-violet-600 text-white hover:bg-violet-500 shadow-[0_0_22px_rgba(139,92,246,0.22)] hover:shadow-[0_0_28px_rgba(139,92,246,0.28)] disabled:opacity-50"
+          >
+            {credits < IG_FLOW.startCost
+              ? "Not enough credits"
+              : `Start for ${IG_FLOW.startCost} credits`}
+          </Button>
+
+          <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/10 p-4">
+            <p className="text-xs font-semibold text-emerald-200">
+              Valid examples
+            </p>
+            <ul className="mt-2 space-y-1 text-xs text-emerald-100/80">
+              <li>• @username</li>
+              <li>• username</li>
+              <li>• instagram.com/username</li>
+            </ul>
+          </div>
+
+          <p className="text-[11px] text-white/45">
+            Use public/authorized data only. This interface represents a
+            simulated flow.
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_28px_rgba(139,92,246,0.12)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <InstagramIconGlow />
+                <div>
+                  <p className="text-sm font-semibold text-white/90">
+                    @{session.target}
+                  </p>
+                  <p className="text-xs text-white/55">Running analysis...</p>
+                </div>
+              </div>
+
+              <span className="rounded-full border border-violet-500/20 bg-violet-500/12 px-3 py-1 text-[11px] font-semibold text-violet-200">
+                {progress}%
+              </span>
             </div>
 
             <div className="mt-4">
-              <Input
-                value={rawTarget}
-                onChange={(e) => setRawTarget(e.target.value)}
-                placeholder={IG_FLOW.placeholder}
-                className="h-11 rounded-2xl border-white/10 bg-black/40 text-white placeholder:text-white/35"
-              />
+              <Progress value={progress} className="h-2 bg-white/10" />
             </div>
 
-            <Button
-              onClick={onStart}
-              disabled={!canStart}
-              className="mt-4 h-11 w-full rounded-2xl bg-white/10 text-white hover:bg-white/15 disabled:opacity-50"
-            >
-              {credits < IG_FLOW.startCost
-                ? "Créditos insuficientes"
-                : `Iniciar por ${IG_FLOW.startCost} créditos`}
-            </Button>
+            <div className="mt-5 space-y-2">
+              {session.steps.map((label, idx) => {
+                const done = idx < session.completedSteps;
+                const active = idx === activeIndex && !isCompleted;
 
-            <div className="mt-4 rounded-2xl border border-emerald-500/15 bg-emerald-500/10 p-4">
-              <p className="text-xs font-semibold text-emerald-200">
-                Exemplos válidos:
+                return (
+                  <div
+                    key={label}
+                    className={[
+                      "flex items-center gap-3 rounded-2xl border px-4 py-3",
+                      done
+                        ? "border-violet-500/20 bg-violet-500/10 text-white/80"
+                        : "border-white/10 bg-black/25 text-white/55",
+                    ].join(" ")}
+                  >
+                    {active ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-violet-200" />
+                    ) : (
+                      <span
+                        className={[
+                          "h-2.5 w-2.5 rounded-full",
+                          done ? "bg-violet-300/80" : "bg-white/20",
+                        ].join(" ")}
+                      />
+                    )}
+                    <span className="text-xs">{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
+              <p className="text-xs font-semibold text-white/85">
+                ⏳ Analysis in progress
               </p>
-              <ul className="mt-2 space-y-1 text-xs text-emerald-100/80">
-                {IG_FLOW.examples.map((ex) => (
-                  <li key={ex}>• {ex}</li>
-                ))}
-              </ul>
+              <p className="mt-1 text-xs text-white/70">
+                Progress: {progress}% · Estimated time: 5 days
+              </p>
             </div>
-
-            <p className="mt-4 text-[11px] text-white/45">
-              Use apenas dados públicos/autorizados. Esta interface representa
-              um fluxo de simulação.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          <Card className="border-white/10 bg-black/35 backdrop-blur-xl">
-            <CardContent className="p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5">
-                    <Instagram className="h-5 w-5 text-white/85" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white/90">
-                      @{session.target}
-                    </p>
-                    <p className="text-xs text-white/55">
-                      Analisando perfil...
-                    </p>
-                  </div>
-                </div>
-
-                <span className="rounded-full border border-violet-500/20 bg-violet-500/12 px-3 py-1 text-[11px] font-semibold text-violet-200">
-                  {progress}%
-                </span>
-              </div>
-
-              <div className="mt-4">
-                <Progress value={progress} className="h-2 bg-white/10" />
-              </div>
-
-              <div className="mt-5 space-y-2">
-                {session.steps.map((label, idx) => {
-                  const done = idx < session.completedSteps;
-                  const active = idx === activeIndex && !isCompleted;
-
-                  return (
-                    <div
-                      key={label}
-                      className={[
-                        "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                        done
-                          ? "border-violet-500/20 bg-violet-500/10 text-white/80"
-                          : "border-white/10 bg-black/25 text-white/35",
-                      ].join(" ")}
-                    >
-                      {active ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-violet-200" />
-                      ) : (
-                        <span
-                          className={[
-                            "h-2.5 w-2.5 rounded-full",
-                            done ? "bg-violet-300/80" : "bg-white/20",
-                          ].join(" ")}
-                        />
-                      )}
-                      <span className="text-xs">{label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
-                <p className="text-xs font-semibold text-white/85">
-                  ⏳ Análise em andamento
-                </p>
-                <p className="mt-1 text-xs text-white/70">
-                  Progresso: {progress}% · Tempo estimado: 5 dias
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
 
           <Button
             onClick={() => cancel("instagram")}
             variant="destructive"
             className="h-12 w-full rounded-2xl"
           >
-            Cancelar Investigação
+            Cancel investigation
           </Button>
 
-          <Card className="border-white/10 bg-black/25 backdrop-blur-xl">
-            <CardContent className="p-4">
-              <p className="text-xs text-white/60 text-center">
-                A análise está demorando...
-              </p>
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <p className="text-xs text-white/60 text-center">
+              This is taking longer than expected...
+            </p>
 
-              <Button
-                onClick={onAccelerate}
-                disabled={isCompleted || credits < IG_FLOW.accelerateCost}
-                className="mt-3 h-12 w-full rounded-2xl bg-violet-600/80 hover:bg-violet-600 disabled:opacity-50"
-              >
-                <Zap className="mr-2 h-4 w-4" />
-                {credits < IG_FLOW.accelerateCost
-                  ? "Créditos insuficientes"
-                  : `Acelerar por ${IG_FLOW.accelerateCost} créditos`}
-              </Button>
+            <Button
+              onClick={onAccelerate}
+              disabled={isCompleted || credits < IG_FLOW.accelerateCost}
+              className="mt-3 h-12 w-full rounded-2xl bg-violet-600 text-white hover:bg-violet-500 shadow-[0_0_22px_rgba(139,92,246,0.22)] hover:shadow-[0_0_28px_rgba(139,92,246,0.28)] disabled:opacity-50"
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              {credits < IG_FLOW.accelerateCost
+                ? "Not enough credits"
+                : `Accelerate for ${IG_FLOW.accelerateCost} credits`}
+            </Button>
 
-              <p className="mt-2 text-center text-[11px] text-white/45">
-                Saldo atual: <span className="text-white/70">{credits}</span>{" "}
-                créditos
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <p className="mt-2 text-center text-[11px] text-white/45">
+              Current balance: <span className="text-white/70">{credits}</span>{" "}
+              credits
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

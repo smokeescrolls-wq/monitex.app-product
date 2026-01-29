@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Phone, Video, Play } from "lucide-react";
+import { ArrowLeft, Phone, Video, EyeOff, Lock } from "lucide-react";
 import type { DirectConversation } from "@/features/direct/direct.utils";
 import { proxyImage } from "@/features/direct/direct.utils";
+import { PaywallModal } from "@/features/direct/components/paywall-modal";
 
 type Props = {
   username: string;
@@ -34,21 +35,36 @@ type Msg =
       reaction?: string;
     };
 
-function MiniAvatar({ src, hidden }: { src: string; hidden?: boolean }) {
+function MiniAvatar({
+  src,
+  hidden,
+  onClick,
+}: {
+  src: string;
+  hidden?: boolean;
+  onClick?: () => void;
+}) {
   if (hidden) return <div className="w-7" />;
   return (
     <div className="w-7">
-      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/10">
+      <button
+        onClick={onClick}
+        className="relative w-6 h-6 rounded-full overflow-hidden border border-white/10 cursor-pointer group"
+        type="button"
+      >
         <Image
           src={src}
           alt="Avatar"
           fill
-          className="object-cover"
+          className="object-cover blur-md"
           sizes="24px"
           priority
           unoptimized
         />
-      </div>
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <EyeOff className="w-3 h-3 text-white/90" />
+        </div>
+      </button>
     </div>
   );
 }
@@ -121,7 +137,9 @@ function StoryCard({
 
   return (
     <div className={`flex items-end gap-2 ${wrap}`}>
-      {!fromMe ? <MiniAvatar src={avatarSrc} hidden={avatarHidden} /> : null}
+      {!fromMe ? (
+        <MiniAvatar src={avatarSrc} hidden={avatarHidden} onClick={onClick} />
+      ) : null}
 
       <button
         onClick={onClick}
@@ -129,30 +147,42 @@ function StoryCard({
           "relative w-[170px] h-[290px]",
           "rounded-2xl overflow-hidden",
           "border border-white/10 bg-[#101114]",
-          "cursor-pointer hover:opacity-90 transition-opacity",
+          "cursor-pointer group transition-all hover:scale-[1.02]",
           fromMe ? "ml-auto" : "",
         ].join(" ")}
         type="button"
       >
         <Image
           src={storySrc}
-          alt={`Story de ${handle}`}
+          alt={`${handle}'s Story`}
           fill
-          className="object-cover"
+          className="object-cover blur-lg scale-110"
           sizes="170px"
           unoptimized
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45" />
+        <div className="absolute inset-0 bg-black/50" />
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+          <div className="bg-black/60 rounded-full p-3 mb-4 backdrop-blur-sm">
+            <EyeOff className="w-8 h-8 text-white/90" />
+          </div>
+          <div className="text-center">
+            <div className="text-[14px] text-white/90 font-semibold mb-1">
+              Story Locked
+            </div>
+            <div className="text-[12px] text-white/70">Click to view</div>
+          </div>
+        </div>
 
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <div className="relative w-7 h-7 rounded-full overflow-hidden border border-white/15">
               <Image
                 src={avatarSrc}
-                alt={`Avatar de ${handle}`}
+                alt={`${handle}'s Avatar`}
                 fill
-                className="object-cover"
+                className="object-cover blur-md"
                 sizes="28px"
                 unoptimized
               />
@@ -162,21 +192,23 @@ function StoryCard({
             </div>
           </div>
 
-          <div className="w-8 h-8 rounded-full bg-black/35 border border-white/10 grid place-items-center">
-            <Play className="w-4 h-4 text-white/90" />
+          <div className="w-8 h-8 rounded-full bg-black/60 border border-white/10 grid place-items-center backdrop-blur-sm">
+            <Lock className="w-4 h-4 text-white/90" />
           </div>
         </div>
 
         {reaction ? (
           <div className="absolute bottom-3 left-3">
-            <span className="inline-flex items-center rounded-full bg-black/45 border border-white/10 px-2 py-1 text-[11px] text-white/95">
+            <span className="inline-flex items-center rounded-full bg-black/60 border border-white/10 px-2 py-1 text-[11px] text-white/95 backdrop-blur-sm">
               {reaction}
             </span>
           </div>
         ) : null}
       </button>
 
-      {fromMe ? <MiniAvatar src={avatarSrc} hidden={avatarHidden} /> : null}
+      {fromMe ? (
+        <MiniAvatar src={avatarSrc} hidden={avatarHidden} onClick={onClick} />
+      ) : null}
     </div>
   );
 }
@@ -194,12 +226,16 @@ function AudioCard({
     <div className="flex flex-col gap-1">
       <button
         onClick={onClick}
-        className="w-[86%] sm:w-[78%] rounded-2xl bg-[#1f1f22] border border-white/10 px-4 py-3 text-left text-white/90 cursor-pointer hover:bg-[#2a2a2d] transition-colors"
+        className="w-[86%] sm:w-[78%] rounded-2xl bg-[#1a1a1d] border border-white/10 px-4 py-3 text-left text-white/50 cursor-pointer hover:bg-[#2a2a2d] transition-colors relative group"
         type="button"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-            <div className="w-0 h-0 border-y-[7px] border-y-transparent border-l-[12px] border-l-white/85 ml-0.5" />
+        <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1 z-10">
+          <Lock className="w-3 h-3 text-white/70" />
+        </div>
+
+        <div className="flex items-center gap-3 opacity-60">
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
+            <div className="w-0 h-0 border-y-[7px] border-y-transparent border-l-[12px] border-l-white/40 ml-0.5" />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -207,19 +243,19 @@ function AudioCard({
               {Array.from({ length: 42 }).map((_, idx) => {
                 const t = (idx + 6) % 10;
                 const heights = [7, 11, 17, 23, 15, 27, 19, 13, 21, 16];
-                const h = heights[t];
+                const h = Math.max(3, heights[t] * 0.4);
                 return (
                   <span
                     key={idx}
-                    className="w-[3px] rounded-full bg-white/90"
+                    className="w-[3px] rounded-full bg-white/40"
                     style={{ height: `${h}px` }}
                   />
                 );
               })}
             </div>
-            <div className="mt-2 flex items-center justify-between text-[12px] text-white/70">
-              <span>Áudio</span>
-              <span className="tabular-nums">{duration}</span>
+            <div className="mt-2 flex items-center justify-between text-[12px]">
+              <span className="text-white/50">Locked audio</span>
+              <span className="tabular-nums text-white/40">{duration}</span>
             </div>
           </div>
         </div>
@@ -243,6 +279,32 @@ export default function ChatLuaClient({ username, convo }: Props) {
     router.push(`/direct?username=${encodeURIComponent(username || "user")}`);
 
   const img = (name: string) => `/chat/${name}`;
+
+  // ---- PAYWALL ----
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallCtx, setPaywallCtx] = useState("");
+
+  const CTA_URL = "/cta";
+
+  const openPaywall = useCallback((ctx: string) => {
+    setPaywallCtx(ctx);
+    setPaywallOpen(true);
+  }, []);
+
+  const paywallTitle = useMemo(() => {
+    if (paywallCtx === "profile") return "Blocked Profile";
+    if (paywallCtx === "call") return "Blocked Call";
+    if (paywallCtx === "video") return "Blocked Video Call";
+    if (paywallCtx.startsWith("story:")) return "Blocked Story";
+    if (paywallCtx.startsWith("audio:")) return "Blocked Audio";
+    if (paywallCtx === "input") return "Chat Blocked";
+    return "Blocked Action";
+  }, [paywallCtx]);
+
+  const paywallDesc = useMemo(() => {
+    return "To unlock this action, VIP access is required.";
+  }, []);
+  // -----------------
 
   const baseMessages: Msg[] = [
     {
@@ -330,19 +392,28 @@ export default function ChatLuaClient({ username, convo }: Props) {
   ];
 
   const handleStoryClick = (storySrc: string, handle: string) => {
-    console.log(`Abrindo story de ${handle}: ${storySrc}`);
-    // Aqui você pode implementar a lógica para abrir o story
-    // Por exemplo, mostrar em tela cheia ou modal
+    openPaywall(`story:${handle}`);
   };
 
   const handleAudioClick = (duration: string) => {
-    console.log(`Reproduzindo áudio de ${duration}`);
-    // Aqui você pode implementar a lógica de reprodução de áudio
+    openPaywall(`audio:${duration}`);
   };
+
+  const handleProfileClick = () => openPaywall("profile");
+  const handleCallClick = () => openPaywall("call");
+  const handleVideoClick = () => openPaywall("video");
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center px-6">
       <div className="bg-black h-screen w-full max-w-112.5 flex flex-col overflow-hidden mx-auto relative shadow-2xl border-x border-gray-800">
+        <PaywallModal
+          open={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          onGoVip={() => router.push(CTA_URL)}
+          title={paywallTitle}
+          description={paywallDesc}
+        />
+
         <header className="flex items-center justify-between px-4 py-3 bg-black z-50 shrink-0 border-b border-gray-800/40">
           <div className="flex items-center gap-3">
             <button
@@ -355,7 +426,7 @@ export default function ChatLuaClient({ username, convo }: Props) {
             </button>
 
             <div className="flex items-center gap-2">
-              <MiniAvatar src={avatarSrc} />
+              <MiniAvatar src={avatarSrc} onClick={handleProfileClick} />
               <div className="leading-tight">
                 <div className="text-[14px] font-semibold">
                   {convo.maskedTitle}
@@ -367,18 +438,26 @@ export default function ChatLuaClient({ username, convo }: Props) {
 
           <div className="flex items-center gap-4">
             <button
+              onClick={handleCallClick}
               aria-label="Call"
-              className="cursor-pointer hover:opacity-80 transition-opacity"
+              className="cursor-pointer hover:opacity-80 transition-opacity relative group"
               type="button"
             >
               <Phone className="w-5.5 h-5.5" />
+              <div className="absolute -top-2 -right-2 bg-black/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Lock className="w-2.5 h-2.5 text-white/70" />
+              </div>
             </button>
             <button
+              onClick={handleVideoClick}
               aria-label="Video"
-              className="cursor-pointer hover:opacity-80 transition-opacity"
+              className="cursor-pointer hover:opacity-80 transition-opacity relative group"
               type="button"
             >
               <Video className="w-5.5 h-5.5" />
+              <div className="absolute -top-2 -right-2 bg-black/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Lock className="w-2.5 h-2.5 text-white/70" />
+              </div>
             </button>
           </div>
         </header>
@@ -408,6 +487,7 @@ export default function ChatLuaClient({ username, convo }: Props) {
                     <MiniAvatar
                       src={avatarSrc}
                       hidden={m.showAvatar === false}
+                      onClick={handleProfileClick}
                     />
                     <AudioCard
                       duration={m.duration}
@@ -439,11 +519,19 @@ export default function ChatLuaClient({ username, convo }: Props) {
 
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/90 border-t border-gray-800/40">
           <button
-            className="w-full h-12 rounded-2xl bg-[#1f1f22] border border-white/10 text-white/55 text-left px-4 cursor-not-allowed"
+            className="w-full h-12 rounded-2xl bg-[#1f1f22] border border-white/10 text-white/55 text-left px-4 cursor-pointer relative group"
             type="button"
-            disabled
+            onClick={() => openPaywall("input")}
           >
             Message…
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 rounded-2xl">
+              <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5 backdrop-blur-sm">
+                <Lock className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-[12px] text-white/80">
+                  Feature blocked
+                </span>
+              </div>
+            </div>
           </button>
         </div>
 

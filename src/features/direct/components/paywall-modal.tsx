@@ -20,25 +20,24 @@ export function PaywallModal(props: {
         </div>
 
         <h3 className="text-white text-lg font-bold mb-2">
-          {title ?? "Ação bloqueada"}
+          {title ?? "Action Blocked"}
         </h3>
 
         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-          {description ??
-            "Para liberar essa ação, é necessário ter acesso VIP."}
+          {description ?? "To unlock this action, VIP access is required."}
         </p>
 
         <button
           onClick={onGoVip}
           className="w-full bg-[#8A7178] hover:bg-[#9d828a] text-white font-semibold py-3 rounded-xl transition-colors"
         >
-          Adquirir Acesso VIP
+          Get VIP Access
         </button>
 
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-white"
-          aria-label="Fechar"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
