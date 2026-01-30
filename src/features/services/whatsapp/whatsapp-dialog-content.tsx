@@ -78,22 +78,22 @@ export default function WhatsappDialogContent({
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white/90">WhatsApp</p>
                 <p className="text-xs text-white/55">
-                  Iniciar investigação (simulação)
+                  Initiate investigation (simulation)
                 </p>
               </div>
 
               <div className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
-                Saldo: {credits} créditos
+                Balance: {credits} credits
               </div>
             </div>
 
             <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
               <p className="text-xs font-semibold text-emerald-200">
-                Como funciona:
+                How it works:
               </p>
               <p className="mt-2 text-xs leading-relaxed text-white/70">
-                Informe um número para iniciar o fluxo. As etapas avançam
-                manualmente via créditos.
+                Enter a number to start the flow. The steps advance manually via
+                credits
               </p>
             </div>
 
@@ -112,8 +112,8 @@ export default function WhatsappDialogContent({
               className="mt-4 h-11 w-full rounded-2xl bg-white/10 text-white hover:bg-white/15 disabled:opacity-50"
             >
               {credits < WA_FLOW.startCost
-                ? "Créditos insuficientes"
-                : `Iniciar por ${WA_FLOW.startCost} créditos`}
+                ? "Insufficient credits"
+                : `Start by ${WA_FLOW.startCost} credits`}
             </Button>
 
             <div className="mt-4 rounded-2xl border border-emerald-500/15 bg-emerald-500/10 p-4">
@@ -128,8 +128,8 @@ export default function WhatsappDialogContent({
             </div>
 
             <p className="mt-4 text-[11px] text-white/45">
-              Use apenas dados públicos/autorizados. Interface de simulação
-              controlada por créditos.
+              Use only public/authorized data. Simulation interface controlled
+              by credits.
             </p>
           </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function WhatsappDialogContent({
 
                   <div>
                     <p className="text-sm font-semibold text-white/90">
-                      Investigando WhatsApp
+                      Investigating WhatsApp
                     </p>
                     <p className="text-xs text-white/55">
                       {formatBRPhone(session.target)}
@@ -195,13 +195,13 @@ export default function WhatsappDialogContent({
 
               <div className="mt-5 rounded-2xl border border-emerald-500/15 bg-emerald-500/10 p-4">
                 <p className="text-xs font-semibold text-emerald-200">
-                  🏆 Investigação em andamento
+                  🏆 Investigation underway
                 </p>
                 <p className="mt-1 text-xs text-white/70">
-                  Monitoramento ativo, com extração contínua e validações
-                  manuais.
+                  Active monitoring, with continuous extraction and manual
+                  validations.
                   <br />
-                  Tempo estimado: {WA_FLOW.estimateDays} dias
+                  Estimated time: {WA_FLOW.estimateDays} days
                 </p>
               </div>
 
@@ -211,7 +211,7 @@ export default function WhatsappDialogContent({
                 className="mt-5 h-12 w-full rounded-2xl"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Cancelar Investigação
+                Cancel Investigation
               </Button>
             </CardContent>
           </Card>
@@ -219,7 +219,7 @@ export default function WhatsappDialogContent({
           <Card className="border-white/10 bg-black/25 backdrop-blur-xl">
             <CardContent className="p-4">
               <p className="text-xs text-white/60 text-center">
-                A análise está demorando...
+                The analysis is taking a long time...
               </p>
 
               <Button
@@ -234,8 +234,8 @@ export default function WhatsappDialogContent({
               </Button>
 
               <p className="mt-2 text-center text-[11px] text-white/45">
-                Saldo atual: <span className="text-white/70">{credits}</span>{" "}
-                créditos
+                Current balance:{" "}
+                <span className="text-white/70">{credits}</span> credits
               </p>
             </CardContent>
           </Card>

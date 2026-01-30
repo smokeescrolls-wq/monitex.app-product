@@ -2,12 +2,12 @@ export const CALLS_FLOW = {
   startCost: 25,
   accelerateCost: 30,
   steps: [
-    "Conectando ao servidor seguro...",
-    "Validando exportação/autorização...",
-    "Carregando histórico de chamadas...",
-    "Indexando duração e tipos...",
-    "Correlacionando contatos mais frequentes...",
-    "Gerando relatório final...",
+"Connecting to secure server...",
+"Validating export/authorization...",
+"Loading call history...",
+"Indexing duration and types...",
+"Correlating most frequent contacts...",
+"Generating final report..."
   ],
 } as const;
 

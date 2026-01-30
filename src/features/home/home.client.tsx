@@ -335,24 +335,28 @@ export default function HomeClient() {
                   </Button>
                 </div>
               )}
-
-              <div className="mt-4 flex items-center justify-center gap-5 text-[13px] text-white/75">
-                <span className="inline-flex items-center gap-2">
+              <div className="mt-8 grid grid-cols-3 items-start justify-items-center gap-10 text-[12px] text-white/70">
+                <div className="flex flex-col items-center gap-2 text-center">
                   <Lock size={16} weight="bold" className="text-violet-400" />
-                  100% Anonymous
-                </span>
-                <span className="inline-flex items-center gap-2">
+                  <div className="leading-[1.05]">
+                    <div>100%</div>
+                    <div>Anonymous</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-2 text-center">
                   <Key size={16} weight="bold" className="text-violet-400" />
-                  No password
-                </span>
-                <span className="inline-flex items-center gap-2">
+                  <div className="leading-[1.05]">No password</div>
+                </div>
+
+                <div className="flex flex-col items-center gap-2 text-center">
                   <CheckCircle
                     size={16}
                     weight="bold"
                     className="text-violet-400"
                   />
-                  Free trial
-                </span>
+                  <div className="leading-[1.05]">Free trial</div>
+                </div>
               </div>
             </form>
           </CardContent>

@@ -10,45 +10,58 @@ export function CtaTrackingScripts({ nonce }: { nonce?: string }) {
       />
 
       <Script id="ozemgummy-inline" strategy="afterInteractive" nonce={nonce}>
-        {`
-document.addEventListener("DOMContentLoaded",function(){
-  var d="trk.ozemgummy.com",_es="PageView,ViewContent",v=_es.split(','),c,a=0,m=10,r=500,
-  sc=function(cn,cv,exd){
+        {`(function(){
+  var d="trk.ozemgummy.com";
+  var events="PageView,ViewContent".split(",");
+  var tries=0, maxTries=10, retryMs=500;
+
+  function setCookie(name, value, days){
     var ex="";
-    if(exd){
-      var dt=new Date;
-      dt.setTime(dt.getTime()+864e5*exd);
-      ex="; expires="+dt.toUTCString()
+    if(days){
+      var dt=new Date();
+      dt.setTime(dt.getTime() + days*864e5);
+      ex="; expires=" + dt.toUTCString();
     }
-    document.cookie=cn+"="+cv+ex+"; path=/; SameSite=Lax; Secure"
-  },
-  f=function(){
-    var p=new URLSearchParams(location.search),
-      pn=["rtkcid","clickid","tid","subid","cid"],
-      fc=null,k,vl;
-    for(k=0;k<pn.length;k++){
-      vl=p.get(pn[k]);
-      if(vl){fc=vl;break}
-    }
-    if(fc){sc("rtkclickid-store",fc,30);return fc}
-    var cm=document.cookie.match(/(?:^|;\\s*)rtkclickid-store=([^;]+)/);
-    return cm&&cm[1]?cm[1]:null
-  },
-  s=function(i){
-    v.forEach(function(e){
-      var ev=e.trim();
-      if(ev){
-        var n=new Image;
-        n.src="https://"+d+"/postback?format=img&type="+encodeURIComponent(ev)+"&clickid="+encodeURIComponent(i)
+    document.cookie = name + "=" + encodeURIComponent(value) + ex + "; path=/; SameSite=Lax; Secure";
+  }
+
+  function getClickId(){
+    try{
+      var p=new URLSearchParams(window.location.search);
+      var keys=["rtkcid","clickid","tid","subid","cid"];
+      for(var i=0;i<keys.length;i++){
+        var v=p.get(keys[i]);
+        if(v){
+          setCookie("rtkclickid-store", v, 30);
+          return v;
+        }
       }
-    })
-  },
-  t=function(){
-    (c=f())?s(c):a<m&&(a++,setTimeout(t,r))
-  };
-  t();
-});
-        `}
+    }catch(e){}
+    var m=document.cookie.match(/(?:^|;\\s*)rtkclickid-store=([^;]+)/);
+    return m && m[1] ? decodeURIComponent(m[1]) : null;
+  }
+
+  function fire(clickId){
+    for(var i=0;i<events.length;i++){
+      var ev=(events[i] || "").trim();
+      if(!ev) continue;
+      var img=new Image();
+      img.src="https://" + d + "/postback?format=img&type=" + encodeURIComponent(ev) + "&clickid=" + encodeURIComponent(clickId);
+    }
+  }
+
+  function tick(){
+    var id=getClickId();
+    if(id) return fire(id);
+    if(tries++ < maxTries) setTimeout(tick, retryMs);
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", tick, { once: true });
+  } else {
+    tick();
+  }
+})();`}
       </Script>
     </>
   );

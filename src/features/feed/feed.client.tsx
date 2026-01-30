@@ -20,6 +20,8 @@ import Image from "next/image";
 
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
 import { PreviewUpgradeCard } from "../direct/components/preview-upgrade-card";
+import { persistRtkFromUrl } from "@/features/tracking/rtk.client";
+import { buildCtaUrl } from "@/features/cta/cta-url.client";
 
 type PerfilBuscado = {
   username: string;
@@ -205,6 +207,10 @@ export default function FeedClient() {
   const searchParams = useSearchParams();
   const usernameRaw = searchParams.get("username") ?? "";
 
+  useEffect(() => {
+    persistRtkFromUrl(searchParams as unknown as URLSearchParams);
+  }, [searchParams]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<InstagramFeedUpstream | null>(null);
@@ -214,8 +220,6 @@ export default function FeedClient() {
     const parsed = instagramUsernameSchema.safeParse(usernameRaw);
     return parsed.success ? parsed.data : "";
   }, [usernameRaw]);
-
-  const CTA_URL = "/cta";
 
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallTitle, setPaywallTitle] = useState<string | undefined>(
@@ -233,8 +237,27 @@ export default function FeedClient() {
 
   const goVip = useCallback(() => {
     setPaywallOpen(false);
-    router.push(CTA_URL);
-  }, [router]);
+
+    const uRaw =
+      data?.perfil_buscado?.username || username || usernameRaw || "user";
+    const u = uRaw.replace(/^@/, "").trim() || "user";
+    const photo = data?.perfil_buscado?.profile_pic_url ?? "";
+
+    try {
+      sessionStorage.setItem(
+        "stalkeaCtaProfile",
+        JSON.stringify({ username: u, profile_pic_url: photo }),
+      );
+    } catch {}
+
+    router.push(
+      buildCtaUrl({
+        username: u,
+        photoUrl: photo || null,
+        extra: { ts: String(Date.now()) },
+      }),
+    );
+  }, [router, data, username, usernameRaw]);
 
   useEffect(() => {
     if (!username) {
@@ -518,7 +541,7 @@ export default function FeedClient() {
 
                     <button
                       type="button"
-                      onClick={() => openPaywall("mais opções do post")}
+                      onClick={() => openPaywall("more post options")}
                       className="hover:opacity-80 transition cursor-pointer"
                     >
                       <MoreHorizontal className="w-5 h-5" />
@@ -527,7 +550,7 @@ export default function FeedClient() {
 
                   <button
                     type="button"
-                    onClick={() => openPaywall("ver mídia do post")}
+                    onClick={() => openPaywall("see post media")}
                     className="w-full bg-zinc-900 aspect-square relative cursor-pointer"
                   >
                     {postItem.post.image_url ? (
@@ -553,7 +576,7 @@ export default function FeedClient() {
                     <div className="flex items-center gap-4">
                       <button
                         type="button"
-                        onClick={() => openPaywall("curtir")}
+                        onClick={() => openPaywall("like")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Heart className="w-6 h-6 hover:text-gray-400 transition" />
@@ -561,7 +584,7 @@ export default function FeedClient() {
 
                       <button
                         type="button"
-                        onClick={() => openPaywall("comentar")}
+                        onClick={() => openPaywall("comment")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <MessageCircle className="w-6 h-6 -rotate-90 hover:text-gray-400 transition" />
@@ -569,7 +592,7 @@ export default function FeedClient() {
 
                       <button
                         type="button"
-                        onClick={() => openPaywall("enviar")}
+                        onClick={() => openPaywall("send")}
                         className="hover:opacity-80 transition cursor-pointer"
                       >
                         <Send className="w-6 h-6 hover:text-gray-400 transition" />
@@ -578,7 +601,7 @@ export default function FeedClient() {
 
                     <button
                       type="button"
-                      onClick={() => openPaywall("salvar")}
+                      onClick={() => openPaywall("save")}
                       className="hover:opacity-80 transition cursor-pointer"
                     >
                       <Bookmark className="w-6 h-6 hover:text-gray-400 transition" />
@@ -619,12 +642,12 @@ export default function FeedClient() {
             })}
           </main>
         </div>
-        {/* Upgrade card fixo acima da navbar */}
+
         <div className="fixed left-1/2 -translate-x-1/2 bottom-[72px] w-full max-w-[550px] z-[90] px-4 pointer-events-none">
           <div className="pointer-events-auto">
             <PreviewUpgradeCard
-              onUpgrade={goVip}
-              onOpenPaywall={() => openPaywall("upgrade card")}
+              username={username || usernameRaw || "user"}
+              profilePicUrl={data?.perfil_buscado?.profile_pic_url ?? undefined}
             />
           </div>
         </div>
@@ -639,7 +662,7 @@ export default function FeedClient() {
           </button>
           <button
             type="button"
-            onClick={() => openPaywall("buscar")}
+            onClick={() => openPaywall("search")}
             className="w-10 h-full flex items-center justify-center hover:opacity-80 transition cursor-pointer"
           >
             <Search className="w-7 h-7" />
@@ -677,10 +700,6 @@ export default function FeedClient() {
                 src={proxyImage(userProfile.profile_pic_url)}
                 className="w-full h-full object-cover"
                 alt=""
-                onError={(e) =>
-                  ((e.target as HTMLImageElement).src =
-                    "/placeholder-avatar.png")
-                }
               />
             </div>
           </button>

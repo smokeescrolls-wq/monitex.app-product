@@ -51,25 +51,21 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      fullName: "",
-      email: "ramom@gmail.com",
-      confirmEmail: "",
-      password: "",
-    },
-    mode: "onSubmit",
+    defaultValues: { fullName: "", email: "", confirmEmail: "", password: "" },
+    mode: "onChange",
   });
 
-  const canSubmit = useMemo(() => {
-    const v = form.getValues();
-    return (
-      v.fullName.length >= 3 &&
-      v.email.length > 3 &&
-      v.confirmEmail.length > 3 &&
-      v.password.length >= 6 &&
-      !pending
-    );
-  }, [form, pending]);
+  const fullName = form.watch("fullName");
+  const email = form.watch("email");
+  const confirmEmail = form.watch("confirmEmail");
+  const password = form.watch("password");
+
+  const canSubmit =
+    fullName.length >= 3 &&
+    email.length > 3 &&
+    confirmEmail.length > 3 &&
+    password.length >= 6 &&
+    !pending;
 
   async function onSubmit(values: RegisterInput) {
     setServerError(null);
@@ -194,7 +190,7 @@ export default function RegisterPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-white/80">
-                          Confirmar E-mail
+                          Confirm Email
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
@@ -219,7 +215,9 @@ export default function RegisterPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white/80">Senha</FormLabel>
+                        <FormLabel className="text-white/80">
+                          Password
+                        </FormLabel>
                         <FormControl>
                           <div className="relative">
                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/45">
@@ -262,8 +260,8 @@ export default function RegisterPage() {
 
                   <Button
                     type="submit"
-                    disabled={!canSubmit}
-                    className="h-12 w-full rounded-xl bg-linear-to-r from-[#7C4DFF] to-[#9A6CFF] text-sm font-extrabold shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95 disabled:opacity-40"
+                    disabled={!form.formState.isValid || pending}
+                    className="h-12 w-full cursor-pointer rounded-xl bg-linear-to-r from-[#7C4DFF] to-[#9A6CFF] text-sm font-extrabold shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95 disabled:opacity-40"
                   >
                     {pending ? "Create..." : "Create account"}
                   </Button>

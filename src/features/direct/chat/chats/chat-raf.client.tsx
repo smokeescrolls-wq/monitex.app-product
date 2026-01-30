@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Phone, Video, EyeOff, Lock } from "lucide-react";
 import type { DirectConversation } from "@/features/direct/direct.utils";
 import { proxyImage } from "@/features/direct/direct.utils";
 import { AvatarCircle } from "@/features/direct/components/avatar-circle";
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
+import { persistRtkFromUrl } from "@/features/tracking/rtk.client";
+import { buildCtaUrl } from "@/features/cta/cta-url.client";
 
 type Props = { username: string; convo: DirectConversation };
 
@@ -22,6 +24,20 @@ type Msg =
       durationLabel?: string;
     }
   | { id: string; kind: "media"; fromMe?: boolean; src?: string };
+
+function unwrapProxyUrl(url: string) {
+  const u = (url || "").trim();
+  if (!u) return "";
+  if (!u.startsWith("/api/image-proxy?url=")) return u;
+  try {
+    const qs = u.split("?")[1] ?? "";
+    const p = new URLSearchParams(qs);
+    const inner = p.get("url");
+    return inner ? decodeURIComponent(inner) : u;
+  } catch {
+    return u;
+  }
+}
 
 function TimeLabel({ text }: { text: string }) {
   return (
@@ -171,7 +187,12 @@ function MediaItem({
 
 export default function ChatRafClient({ username, convo }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    persistRtkFromUrl(searchParams as unknown as URLSearchParams);
+  }, [searchParams]);
 
   const [extraOldVisible, setExtraOldVisible] = useState(false);
 
@@ -183,7 +204,6 @@ export default function ChatRafClient({ username, convo }: Props) {
   const goBack = () =>
     router.push(`/direct?username=${encodeURIComponent(username || "user")}`);
 
-  // neutral paths
   const mediaList = useMemo(
     () => [
       "/user-midias-fake/locked-media-1.jpg",
@@ -196,7 +216,6 @@ export default function ChatRafClient({ username, convo }: Props) {
 
   const messages: Msg[] = [
     { id: "t1", kind: "time", text: "3 DAYS AGO, 22:47" },
-
     {
       id: "c1",
       kind: "video",
@@ -205,11 +224,9 @@ export default function ChatRafClient({ username, convo }: Props) {
       durationLabel: "01:43",
     },
     { id: "c2", kind: "video", state: "missed", timeLabel: "15:18" },
-
     { id: "m1", kind: "meText", text: "Connection is bad" },
     { id: "m2", kind: "meText", text: "I'm on 4G" },
     { id: "m3", kind: "meText", text: "Call again" },
-
     {
       id: "c3",
       kind: "video",
@@ -224,25 +241,17 @@ export default function ChatRafClient({ username, convo }: Props) {
       timeLabel: "13:33",
       durationLabel: "01:55",
     },
-
     { id: "m4", kind: "meText", text: "Okay" },
     { id: "m5", kind: "meText", text: "😵‍💫" },
-
     { id: "o1", kind: "otherText", text: "Look at this…" },
-
     { id: "im1", kind: "media", src: mediaList[0] },
-
     { id: "o2", kind: "otherText", text: "lol", showAvatar: false },
-
     { id: "m6", kind: "meText", text: "Wow" },
     { id: "m7", kind: "meText", text: "That's intense" },
-
     { id: "o3", kind: "otherText", text: "Send more", showAvatar: true },
-
     { id: "im2", kind: "media", fromMe: true, src: mediaList[1] },
     { id: "im3", kind: "media", fromMe: true, src: mediaList[2] },
     { id: "im4", kind: "media", fromMe: true, src: mediaList[3] },
-
     { id: "o4", kind: "otherText", text: "You asked for 1, got 3" },
     {
       id: "o5",
@@ -250,7 +259,6 @@ export default function ChatRafClient({ username, convo }: Props) {
       text: "That's why I trust you",
       showAvatar: false,
     },
-
     { id: "m8", kind: "meText", text: "I need to go now" },
   ];
 
@@ -279,11 +287,8 @@ export default function ChatRafClient({ username, convo }: Props) {
     return () => el.removeEventListener("scroll", onScroll as any);
   }, [extraOldVisible]);
 
-  // ---- PAYWALL ----
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallCtx, setPaywallCtx] = useState<string>("");
-
-  const CTA_URL = "/cta";
 
   const openPaywall = useCallback((ctx: string) => {
     setPaywallCtx(ctx);
@@ -300,11 +305,32 @@ export default function ChatRafClient({ username, convo }: Props) {
     return "Action locked";
   }, [paywallCtx]);
 
-  const paywallDesc = useMemo(() => {
-    return "To unlock this action, VIP access is required.";
-  }, []);
+  const paywallDesc = useMemo(
+    () => "To unlock this action, VIP access is required.",
+    [],
+  );
 
-  const handleMediaClick = (src: string, fromMe?: boolean) => {
+  const goVip = useCallback(() => {
+    const u = (username || "").replace(/^@/, "").trim() || "user";
+    const photo = unwrapProxyUrl(convo?.avatarUrl ?? "");
+
+    try {
+      sessionStorage.setItem(
+        "stalkeaCtaProfile",
+        JSON.stringify({ username: u, profile_pic_url: photo }),
+      );
+    } catch {}
+
+    router.push(
+      buildCtaUrl({
+        username: u,
+        photoUrl: photo || null,
+        extra: { ts: String(Date.now()) },
+      }),
+    );
+  }, [router, username, convo?.avatarUrl]);
+
+  const handleMediaClick = (_src: string, fromMe?: boolean) => {
     openPaywall(`media:${fromMe ? "me" : "other"}`);
   };
 
@@ -318,7 +344,6 @@ export default function ChatRafClient({ username, convo }: Props) {
   const handleProfileClick = () => openPaywall("profile");
   const handleCallClick = () => openPaywall("call");
   const handleVideoClick = () => openPaywall("video");
-  // -----------------
 
   return (
     <div className="min-h-screen bg-black text-white flex justify-center px-6">
@@ -326,7 +351,7 @@ export default function ChatRafClient({ username, convo }: Props) {
         <PaywallModal
           open={paywallOpen}
           onClose={() => setPaywallOpen(false)}
-          onGoVip={() => router.push(CTA_URL)}
+          onGoVip={goVip}
           title={paywallTitle}
           description={paywallDesc}
         />

@@ -129,6 +129,14 @@ export default function AnalysisClient() {
   const todayCountBase = 268588;
   const liveCount = useLiveCounter(todayCountBase);
 
+  const weekdayLabel = useMemo(() => {
+    return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
+      new Date(),
+    );
+  }, []);
+
+  const neonSoft = "drop-shadow-[0_0_10px_rgba(124,77,255,0.22)]";
+
   const p = data?.data?.profileDetails;
 
   return (
@@ -234,31 +242,54 @@ export default function AnalysisClient() {
 
               <div className="flex w-full gap-3 px-4">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => router.push("/")}
-                  className="h-14 flex-1 rounded-lg border border-[#2D2D33] cursor-pointer bg-[#16161A] text-sm font-bold text-white hover:bg-[#1E1E24]"
+                  className="
+                    h-14 flex-1 rounded-xl
+                    border border-violet-500/25 bg-white/[0.03]
+                    text-sm font-bold text-white
+                    shadow-[0_10px_30px_rgba(0,0,0,0.35)]
+                    transition-all duration-200
+                    hover:border-violet-400/45 hover:bg-violet-500/10 hover:shadow-[0_14px_40px_rgba(124,77,255,0.18)]
+                    active:translate-y-[1px] active:shadow-[0_6px_18px_rgba(0,0,0,0.35)] hover:text-white/70
+                    focus-visible:ring-2 focus-visible:ring-violet-400/40 focus-visible:ring-offset-0 cursor-pointer
+                  "
                 >
                   Fix @
                 </Button>
 
                 <Button
+                  type="button"
                   onClick={onConfirm}
                   disabled={busy || !p}
-                  className="h-14 flex-1 rounded-lg bg-linear-to-r cursor-pointer from-[#7C4DFF] to-[#9A6CFF] text-sm font-bold text-white shadow-[0_8px_30px_rgba(124,77,255,0.4)]"
+                  className="
+                    h-14 flex-1 rounded-xl
+                    bg-gradient-to-r from-violet-600 to-violet-500
+                    text-sm font-bold text-white
+                    shadow-[0_12px_36px_rgba(124,77,255,0.35)]
+                    transition-all duration-200
+                    hover:-translate-y-[1px] hover:shadow-[0_18px_48px_rgba(124,77,255,0.45)]
+                    active:translate-y-[1px] active:shadow-[0_10px_30px_rgba(124,77,255,0.28)]
+                    disabled:opacity-60 disabled:hover:translate-y-0
+                    focus-visible:ring-2 focus-visible:ring-violet-400/50 focus-visible:ring-offset-0 cursor-pointer
+                  "
                 >
                   {okToSearch ? "Confirm and continue" : "View plans"}
-                  <ChevronRight className="ml-2 h-4 w-4 translate-y-px" />
+                  <ChevronRight className="h-4 w-4 translate-y-px opacity-90" />
                 </Button>
               </div>
             </CardContent>
           </Card>
 
           <div className="mt-6 text-center">
-            <p className="text-xs font-bold tracking-wide text-[#7C4DFF]">
-              <span className="font-black text-white/90">
+            <p
+              className={`text-xs font-bold tracking-wide text-violet-300/80 ${neonSoft}`}
+            >
+              <span className={`font-normal text-violet-300/80 ${neonSoft}`}>
                 +{liveCount.toLocaleString("en-US")}
               </span>{" "}
-              profiles analyzed today
+              Profiles analyzed on {weekdayLabel}
             </p>
           </div>
         </div>

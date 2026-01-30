@@ -5,6 +5,7 @@ out
 .env
 .env.local
 .env.exemple
+.env.example
 coverage
 playwright-report
 

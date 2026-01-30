@@ -127,11 +127,6 @@ export default function FacebookDialogContent({
               <li>• https://m.facebook.com/username</li>
             </ul>
           </div>
-
-          <p className="text-[11px] text-white/45">
-            Use public/authorized data only. This is a credit-controlled
-            simulation interface.
-          </p>
         </>
       ) : (
         <>

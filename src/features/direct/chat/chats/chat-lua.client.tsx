@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Phone, Video, EyeOff, Lock } from "lucide-react";
 import type { DirectConversation } from "@/features/direct/direct.utils";
 import { proxyImage } from "@/features/direct/direct.utils";
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
+import { persistRtkFromUrl } from "@/features/tracking/rtk.client";
+import { buildCtaUrl } from "@/features/cta/cta-url.client";
 
 type Props = {
   username: string;
@@ -34,6 +36,20 @@ type Msg =
       showAvatar?: boolean;
       reaction?: string;
     };
+
+function unwrapProxyUrl(url: string) {
+  const u = (url || "").trim();
+  if (!u) return "";
+  if (!u.startsWith("/api/image-proxy?url=")) return u;
+  try {
+    const qs = u.split("?")[1] ?? "";
+    const p = new URLSearchParams(qs);
+    const inner = p.get("url");
+    return inner ? decodeURIComponent(inner) : u;
+  } catch {
+    return u;
+  }
+}
 
 function MiniAvatar({
   src,
@@ -268,7 +284,12 @@ function AudioCard({
 
 export default function ChatLuaClient({ username, convo }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    persistRtkFromUrl(searchParams as unknown as URLSearchParams);
+  }, [searchParams]);
 
   const avatarSrc = useMemo(
     () => proxyImage(convo.avatarUrl),
@@ -280,11 +301,8 @@ export default function ChatLuaClient({ username, convo }: Props) {
 
   const img = (name: string) => `/chat/${name}`;
 
-  // ---- PAYWALL ----
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallCtx, setPaywallCtx] = useState("");
-
-  const CTA_URL = "/cta";
 
   const openPaywall = useCallback((ctx: string) => {
     setPaywallCtx(ctx);
@@ -301,10 +319,30 @@ export default function ChatLuaClient({ username, convo }: Props) {
     return "Blocked Action";
   }, [paywallCtx]);
 
-  const paywallDesc = useMemo(() => {
-    return "To unlock this action, VIP access is required.";
-  }, []);
-  // -----------------
+  const paywallDesc = useMemo(
+    () => "To unlock this action, VIP access is required.",
+    [],
+  );
+
+  const goVip = useCallback(() => {
+    const u = (username || "").replace(/^@/, "").trim() || "user";
+    const photo = unwrapProxyUrl(convo?.avatarUrl ?? "");
+
+    try {
+      sessionStorage.setItem(
+        "stalkeaCtaProfile",
+        JSON.stringify({ username: u, profile_pic_url: photo }),
+      );
+    } catch {}
+
+    router.push(
+      buildCtaUrl({
+        username: u,
+        photoUrl: photo || null,
+        extra: { ts: String(Date.now()) },
+      }),
+    );
+  }, [router, username, convo?.avatarUrl]);
 
   const baseMessages: Msg[] = [
     {
@@ -391,7 +429,7 @@ export default function ChatLuaClient({ username, convo }: Props) {
     { id: "t6", kind: "time", text: "TODAY, 16:32" },
   ];
 
-  const handleStoryClick = (storySrc: string, handle: string) => {
+  const handleStoryClick = (_storySrc: string, handle: string) => {
     openPaywall(`story:${handle}`);
   };
 
@@ -409,7 +447,7 @@ export default function ChatLuaClient({ username, convo }: Props) {
         <PaywallModal
           open={paywallOpen}
           onClose={() => setPaywallOpen(false)}
-          onGoVip={() => router.push(CTA_URL)}
+          onGoVip={goVip}
           title={paywallTitle}
           description={paywallDesc}
         />

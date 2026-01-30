@@ -39,8 +39,8 @@ const SERVICES: Service[] = [
   {
     key: "instagram",
     title: "Instagram",
-    description: "Veja insights e informações públicas do perfil.",
-    badge: "Grátis",
+    description: "View insights and public profile information.",
+    badge: "Free",
     icon: <Instagram className="h-4 w-4" />,
     accent: {
       iconBg: "bg-pink-500/15",
@@ -50,7 +50,7 @@ const SERVICES: Service[] = [
       pillBorder: "border-violet-500/20",
     },
     rightPill: {
-      label: "Grátis",
+      label: "Free",
       bg: "bg-violet-500/15",
       fg: "text-violet-200",
       border: "border-violet-500/20",
@@ -59,8 +59,8 @@ const SERVICES: Service[] = [
   {
     key: "whatsapp",
     title: "WhatsApp",
-    description: "Simule a análise de uma sessão autorizada.",
-    badge: "40 créditos",
+    description: "Simulate analysis of an authorized session.",
+    badge: "40 credits",
     icon: <MessageCircle className="h-4 w-4" />,
     accent: {
       iconBg: "bg-emerald-500/15",
@@ -73,8 +73,8 @@ const SERVICES: Service[] = [
   {
     key: "facebook",
     title: "Facebook",
-    description: "Simule o pipeline de análise via URL.",
-    badge: "45 créditos",
+    description: "Simulate the analysis pipeline via URL.",
+    badge: "45 credits",
     icon: <Facebook className="h-4 w-4" />,
     accent: {
       iconBg: "bg-sky-500/15",
@@ -86,9 +86,9 @@ const SERVICES: Service[] = [
   },
   {
     key: "location",
-    title: "Localização",
-    description: "Simule padrões e eventos de localização.",
-    badge: "60 créditos",
+    title: "Location",
+    description: "Simulate location patterns and events.",
+    badge: "60 credits",
     icon: <MapPin className="h-4 w-4" />,
     accent: {
       iconBg: "bg-orange-500/15",
@@ -101,8 +101,8 @@ const SERVICES: Service[] = [
   {
     key: "sms",
     title: "SMS",
-    description: "Simule análise de mensagens autorizadas.",
-    badge: "30 créditos",
+    description: "Simulate analysis of authorized messages.",
+    badge: "30 credits",
     icon: <MessageSquareText className="h-4 w-4" />,
     accent: {
       iconBg: "bg-yellow-500/15",
@@ -114,9 +114,9 @@ const SERVICES: Service[] = [
   },
   {
     key: "calls",
-    title: "Chamadas",
-    description: "Simule análise de registros autorizados.",
-    badge: "25 créditos",
+    title: "Calls",
+    description: "Simulate analysis of authorized call logs.",
+    badge: "25 credits",
     icon: <Phone className="h-4 w-4" />,
     accent: {
       iconBg: "bg-lime-500/15",
@@ -128,9 +128,9 @@ const SERVICES: Service[] = [
   },
   {
     key: "camera",
-    title: "Câmera",
-    description: "Simule processamento de mídia autorizada.",
-    badge: "55 créditos",
+    title: "Camera",
+    description: "Simulate processing of authorized media.",
+    badge: "55 credits",
     icon: <Camera className="h-4 w-4" />,
     accent: {
       iconBg: "bg-fuchsia-500/15",
@@ -142,9 +142,9 @@ const SERVICES: Service[] = [
   },
   {
     key: "others",
-    title: "Outras Redes",
-    description: "Simule correlação de resultados em fontes públicas.",
-    badge: "70 créditos",
+    title: "Other Networks",
+    description: "Simulate correlation of results from public sources.",
+    badge: "70 credits",
     icon: <Share2 className="h-4 w-4" />,
     accent: {
       iconBg: "bg-red-500/15",
@@ -160,7 +160,7 @@ export function AvailableServices() {
   return (
     <section className="w-full">
       <div className="mb-3 flex items-center gap-2 text-white/85">
-        <span className="text-xs font-semibold">Serviços Disponíveis</span>
+        <span className="text-xs font-semibold">Available Services</span>
       </div>
 
       <Card className="border-white/10 bg-black/35 backdrop-blur-xl">

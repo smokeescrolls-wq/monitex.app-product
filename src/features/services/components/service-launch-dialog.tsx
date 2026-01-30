@@ -180,7 +180,7 @@ export function ServiceLaunchDialog({
               disabled={!canStart}
               className="h-11 rounded-xl bg-linear-to-r from-violet-600 to-indigo-500 font-bold shadow-[0_18px_60px_rgba(124,58,237,0.35)]"
             >
-              Buscar
+              Search
             </Button>
           </div>
 

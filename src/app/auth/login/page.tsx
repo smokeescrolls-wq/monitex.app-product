@@ -30,8 +30,8 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const title = "Entre no Monitex.ai";
-  const subtitle = "Entre com sua conta para continuar";
+  const title = "Open Monitex.ai";
+  const subtitle = "Log in with your account to continue.";
 
   const titleCount = useTypewriter(title.length, {
     startDelayMs: 220,
@@ -48,13 +48,13 @@ export default function LoginPage() {
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "ramom@gmail.com", password: "" },
-    mode: "onSubmit",
+    defaultValues: { email: "exemple@exemple.com", password: "" },
+    mode: "onChange",
   });
 
   const canSubmit = useMemo(() => {
     const v = form.getValues();
-    return v.email.length > 3 && v.password.length >= 6 && !pending;
+    return v.email.length > 3 && v.password.length >= 8 && !pending;
   }, [form, pending]);
 
   async function onSubmit(values: LoginInput) {
@@ -143,6 +143,9 @@ export default function LoginPage() {
                               inputMode="email"
                               className="h-12 border-white/10 bg-white/5 pl-10 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
                               placeholder="youremail@email.com"
+                              autoComplete="email"
+                              autoCorrect="off"
+                              autoCapitalize="none"
                             />
                           </div>
                         </FormControl>
@@ -170,6 +173,7 @@ export default function LoginPage() {
                               type={showPw ? "text" : "password"}
                               className="h-12 border-white/10 bg-white/5 pl-10 pr-11 text-white placeholder:text-white/35 focus-visible:ring-violet-500/35"
                               placeholder="tour password"
+                              autoComplete="current-password"
                             />
 
                             <button
@@ -201,7 +205,7 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    disabled={!canSubmit}
+                    disabled={!form.formState.isValid || pending}
                     className="h-12 w-full rounded-xl bg-linear-to-r from-[#7C4DFF] to-[#9A6CFF] text-sm font-extrabold shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95 disabled:opacity-40"
                   >
                     <LogIn className="mr-2 h-4 w-4" />
@@ -209,12 +213,12 @@ export default function LoginPage() {
                   </Button>
 
                   <p className="text-center text-xs text-white/55">
-                    Não tem uma conta?{" "}
+                    Don't have an account?{" "}
                     <Link
                       href="/auth/register"
                       className="font-bold text-violet-300 hover:text-violet-200"
                     >
-                      Criar conta
+                      Create a account
                     </Link>
                   </p>
                 </form>

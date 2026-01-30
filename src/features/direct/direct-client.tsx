@@ -16,6 +16,8 @@ import {
 } from "@/features/direct/direct.utils";
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
 import { PreviewUpgradeCard } from "@/features/direct/components/preview-upgrade-card";
+import { persistRtkFromUrl } from "@/features/tracking/rtk.client";
+import { buildCtaUrl } from "@/features/cta/cta-url.client";
 
 type InstagramFeedUpstream = z.infer<
   typeof instagramFeedUpstreamResponseSchema
@@ -129,6 +131,10 @@ export default function DirectClient() {
   const searchParams = useSearchParams();
   const usernameRaw = searchParams.get("username") ?? "";
 
+  useEffect(() => {
+    persistRtkFromUrl(searchParams);
+  }, [searchParams]);
+
   const username = useMemo(() => {
     const parsed = instagramUsernameSchema.safeParse(usernameRaw);
     return parsed.success ? parsed.data : "";
@@ -171,8 +177,6 @@ export default function DirectClient() {
 
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallCtx, setPaywallCtx] = useState("action");
-
-  const CTA_URL = "/cta";
 
   const openPaywall = useCallback((ctx: string) => {
     setPaywallCtx(ctx);
@@ -310,6 +314,20 @@ export default function DirectClient() {
     return url ? proxyImage(url) : "";
   }, [data]);
 
+  const rawProfilePic = useMemo(() => {
+    const url = data?.perfil_buscado?.profile_pic_url ?? "";
+    return url || "";
+  }, [data]);
+
+  const ctaHref = useMemo(() => {
+    const u = (username || usernameRaw || "").trim();
+    return buildCtaUrl({
+      username: u,
+      photoUrl: rawProfilePic || null,
+      extra: { ts: String(Date.now()) },
+    });
+  }, [username, usernameRaw, rawProfilePic]);
+
   const notesList = useMemo(() => {
     const list = data?.lista_perfis_publicos ?? [];
     return list.slice(0, 7).map((profile: any, index: number) => ({
@@ -322,7 +340,6 @@ export default function DirectClient() {
     }));
   }, [data]);
 
-  // ✅ READY IMPLEMENTATION: ensures /cta?username=... and saves profile to sessionStorage
   const goVip = useCallback(() => {
     const u = (username || usernameRaw || "").trim() || "user";
     const photo = data?.perfil_buscado?.profile_pic_url ?? "";
@@ -334,12 +351,14 @@ export default function DirectClient() {
       );
     } catch {}
 
-    const qs = new URLSearchParams();
-    qs.set("username", u);
-    qs.set("ts", String(Date.now()));
-
-    router.push(`${CTA_URL}?${qs.toString()}`);
-  }, [router, CTA_URL, username, usernameRaw, data]);
+    router.push(
+      buildCtaUrl({
+        username: u,
+        photoUrl: photo || null,
+        extra: { ts: String(Date.now()) },
+      }),
+    );
+  }, [router, username, usernameRaw, data]);
 
   return (
     <div className="bg-black min-h-screen text-white flex justify-center px-6">
@@ -379,12 +398,12 @@ export default function DirectClient() {
             </button>
           </div>
         </header>
-        {/* Fixed upgrade card above the navbar */}
+
         <div className="fixed left-1/2 -translate-x-1/2 bottom-[72px] w-full max-w-[550px] z-[90] px-4 pointer-events-none">
           <div className="pointer-events-auto">
             <PreviewUpgradeCard
-              onUpgrade={() => router.push(CTA_URL)}
-              onOpenPaywall={() => openPaywall("upgrade card")}
+              username={username || usernameRaw || "user"}
+              profilePicUrl={data?.perfil_buscado?.profile_pic_url ?? undefined}
             />
           </div>
         </div>

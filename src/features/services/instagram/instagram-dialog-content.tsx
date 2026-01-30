@@ -127,11 +127,6 @@ export default function InstagramDialogContent({
               <li>• instagram.com/username</li>
             </ul>
           </div>
-
-          <p className="text-[11px] text-white/45">
-            Use public/authorized data only. This interface represents a
-            simulated flow.
-          </p>
         </>
       ) : (
         <>

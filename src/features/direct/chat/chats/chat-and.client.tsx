@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Phone, Video, EyeOff, Lock } from "lucide-react";
 import type { DirectConversation } from "@/features/direct/direct.utils";
 import { proxyImage } from "@/features/direct/direct.utils";
 import { AvatarCircle } from "@/features/direct/components/avatar-circle";
 import { PaywallModal } from "@/features/direct/components/paywall-modal";
+import { persistRtkFromUrl } from "@/features/tracking/rtk.client";
+import { buildCtaUrl } from "@/features/cta/cta-url.client";
 
 type Props = {
   username: string;
@@ -186,7 +188,12 @@ function AudioCard({
 
 export default function ChatAndClient({ username, convo }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    persistRtkFromUrl(searchParams);
+  }, [searchParams]);
 
   const [extraOldVisible, setExtraOldVisible] = useState(false);
 
@@ -197,8 +204,6 @@ export default function ChatAndClient({ username, convo }: Props) {
 
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallCtx, setPaywallCtx] = useState("");
-
-  const CTA_URL = "/cta";
 
   const openPaywall = useCallback((ctx: string) => {
     setPaywallCtx(ctx);
@@ -231,25 +236,24 @@ export default function ChatAndClient({ username, convo }: Props) {
   const goBack = () =>
     router.push(`/direct?username=${encodeURIComponent(username || "user")}`);
 
-  // ✅ FIX: sempre navega pra /cta com username (e salva profile pro CTA)
   const goVip = useCallback(() => {
-    const u = (username || "").trim() || "user";
+    const u = (username || "").replace(/^@/, "").trim() || "user";
+    const photo = convo?.avatarUrl ?? "";
 
     try {
       sessionStorage.setItem(
         "stalkeaCtaProfile",
-        JSON.stringify({
-          username: u,
-          profile_pic_url: convo?.avatarUrl ?? "",
-        }),
+        JSON.stringify({ username: u, profile_pic_url: photo }),
       );
     } catch {}
 
-    const qs = new URLSearchParams();
-    qs.set("username", u);
-    qs.set("ts", String(Date.now()));
-
-    router.push(`${CTA_URL}?${qs.toString()}`);
+    router.push(
+      buildCtaUrl({
+        username: u,
+        photoUrl: photo || null,
+        extra: { ts: String(Date.now()) },
+      }),
+    );
   }, [router, username, convo?.avatarUrl]);
 
   const baseMessages: Msg[] = [

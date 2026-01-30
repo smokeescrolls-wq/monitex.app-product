@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { Clock3, Zap } from "lucide-react";
 
 function formatMMSS(totalSeconds: number) {
@@ -11,17 +12,33 @@ function formatMMSS(totalSeconds: number) {
 }
 
 type Props = {
+  username: string;
+  profilePicUrl?: string;
+  ctaUrl?: string;
   storageKey?: string;
   durationSeconds?: number;
-  onUpgrade: () => void;
-
-  onOpenPaywall?: () => void;
 };
 
+function SpinnerRing({ className = "" }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={[
+        "inline-flex w-4 h-4 rounded-full",
+        "border border-white/20 border-t-white/80",
+        "animate-spin",
+        className,
+      ].join(" ")}
+    />
+  );
+}
+
 export function PreviewUpgradeCard({
+  username,
+  profilePicUrl,
+  ctaUrl = "/cta",
   storageKey = "stalkeaPreviewEndsAt",
   durationSeconds = 10 * 60,
-  onUpgrade,
 }: Props) {
   const [now, setNow] = useState(() => Date.now());
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -59,40 +76,90 @@ export function PreviewUpgradeCard({
     [remainingSeconds],
   );
 
-  return (
-    <div className="w-full rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] p-4 shadow-[0_18px_60px_rgba(124,58,237,0.35)] border border-white/10">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
+  const avatarSrc = useMemo(() => {
+    if (!profilePicUrl) return "/placeholder-avatar.png";
+    return profilePicUrl.startsWith("/api/image-proxy?url=")
+      ? profilePicUrl
+      : `/api/image-proxy?url=${encodeURIComponent(profilePicUrl)}`;
+  }, [profilePicUrl]);
 
-          <div className="flex flex-col leading-tight">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-sm">
-                Preview available for {timeLabel}
-              </span>
-              <div className="flex items-center gap-1 text-white/80 text-xs">
-                <Clock3 className="w-3.5 h-3.5" />
+  const handleUpgrade = () => {
+    const u = (username || "").trim() || "user";
+
+    try {
+      sessionStorage.setItem(
+        "stalkeaCtaProfile",
+        JSON.stringify({ username: u, profile_pic_url: profilePicUrl ?? "" }),
+      );
+    } catch {}
+
+    const qs = new URLSearchParams();
+    qs.set("username", u);
+    qs.set("ts", String(Date.now()));
+
+    window.location.assign(`${ctaUrl}?${qs.toString()}`);
+  };
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f0f14] via-[#12101b] to-[#0e0c16] shadow-[0_18px_70px_rgba(124,58,237,0.25)]">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          {/* LEFT */}
+          <div className="min-w-0 flex-1">
+            {/* top row */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+
+              <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                <span className="text-white font-semibold text-[13px] truncate">
+                  Preview available
+                </span>
+
+                <span className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-[11px] text-white/80">
+                  <Clock3 className="w-3.5 h-3.5" />
+                  <span className="tabular-nums">{timeLabel}</span>
+                  <SpinnerRing className="w-3.5 h-3.5" />
+                </span>
               </div>
             </div>
 
-            <p className="mt-1 text-white/85 text-xs">
-              You earned {Math.floor(durationSeconds / 60)} minutes to test the
-              tool for free, but to unlock all features and get permanent access
-              you need to be a VIP member.
-            </p>
-          </div>
-        </div>
+            <div className="mt-2 flex items-center gap-2 min-w-0 pl-[7px]">
+              <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                <Image
+                  src={avatarSrc}
+                  alt=""
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
 
-        <button
-          type="button"
-          onClick={onUpgrade}
-          className="shrink-0 cursor-pointer bg-white text-[#5B21B6] font-bold text-xs px-4 py-2 rounded-full hover:bg-white/90 active:scale-[0.99]"
-        >
-          Become VIP
-        </button>
+              <div className="min-w-0">
+                <div className="text-[12px] text-white/85 truncate leading-tight">
+                  @{username || "user"}
+                </div>
+                <div className="text-[11px] text-white/55 leading-snug">
+                  Unlock all features and permanent access with VIP.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <button
+            type="button"
+            onClick={handleUpgrade}
+            className="shrink-0 rounded-full cursor-pointer bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-[0.99] transition px-4 py-2 text-xs font-bold text-white shadow-[0_10px_30px_rgba(124,58,237,0.35)]"
+          >
+            Become VIP
+          </button>
+        </div>
       </div>
+
+      <div className="h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent opacity-70" />
     </div>
   );
 }

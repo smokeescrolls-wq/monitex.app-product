@@ -588,11 +588,11 @@ export default function CtaClient() {
 
             <div className="bg-[#161618] border border-purple-500/20 rounded-2xl p-4 text-center mb-6 relative">
               <span className="text-gray-500 text-sm line-through block mb-1">
-                Was: R$ 279,90
+                Was: $ 279,90
               </span>
 
               <span className="text-4xl font-black text-purple-500">
-                R$ 37<span className="text-2xl">,00</span>
+                $ 37<span className="text-2xl">,00</span>
               </span>
 
               <div className="flex justify-center gap-4 mt-3 text-[10px] text-gray-400">
@@ -642,7 +642,7 @@ export default function CtaClient() {
               <div className="bg-[#1C1C1E] border border-gray-800 py-4 px-3 rounded-xl flex items-center gap-3">
                 <Check className="w-5 h-5 text-purple-500 shrink-0" />
                 <span className="text-xs text-gray-200">
-                  2 surprise bonuses worth R$120,00
+                  2 surprise bonuses worth $120,00
                 </span>
               </div>
             </div>
@@ -656,7 +656,7 @@ export default function CtaClient() {
           >
             <div className="bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] rounded-[14px] py-4 px-6 flex flex-col items-center">
               <span className="text-md font-bold text-white mb-1">
-                Unlock everything now for R$37
+                Unlock everything now for $37
               </span>
               <span className="text-xs text-purple-200">
                 Access unlocked in up to 2 minutes
@@ -871,27 +871,26 @@ export default function CtaClient() {
         <div className="h-8" />
       </div>
 
-      <div className="slide-up-animation fixed bottom-0 left-0 right-0 bg-[#151517]/95 backdrop-blur-md border-t border-gray-800 p-4 pb-6 z-50">
-        <div className="max-w-[450px] mx-auto flex items-center justify-between gap-4">
-          <div className="flex flex-col">
-            <span className="font-bold text-white text-sm">
+      <div className="slide-up-animation fixed bottom-0 left-0 right-0 z-50 border-t border-gray-800 bg-[#151517]/95 p-4 pb-6 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[520px] items-center justify-between gap-4">
+          {/* Texto */}
+          <div className="min-w-0">
+            <div className="text-sm font-bold text-white">
               Finish your purchase now!
-            </span>
-            <span className="text-[10px] text-gray-400 leading-tight">
-              Don’t leave or reload this page.
-              <br />
+            </div>
+            <div className="mt-1 text-[11px] leading-tight text-gray-400">
+              Don’t leave or reload this page. <br />
               This lookup cannot be repeated.
-            </span>
+            </div>
           </div>
 
-          <button
-            onClick={goToCheckout}
-            className="bg-[#584cea] hover:bg-[#4a3fcb] cursor-pointer text-white font-bold text-xs px-4 py-3 rounded-xl shadow-lg whitespace-nowrap leading-tight"
+          {/* Botão */}
+          <a
+            href="https://trk.ozemgummy.com/click?tid=SEU_TID&subid={SUBID}"
+            className="shrink-0 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#9A6CFF] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_35px_rgba(124,77,255,0.35)] hover:opacity-95"
           >
-            Unlock
-            <br />
-            Access Now
-          </button>
+            Unlock VIP
+          </a>
         </div>
       </div>
 
@@ -908,13 +907,6 @@ export default function CtaClient() {
               You can only perform one search. To spy on the profile, you must
               purchase the VIP plan.
             </p>
-
-            <button
-              onClick={goToCheckout}
-              className="w-full bg-gradient-to-r from-[#7C4DFF] to-[#9A6CFF] text-white font-semibold py-3 rounded-xl transition-colors hover:opacity-90 mb-3"
-            >
-              Buy VIP Plan
-            </button>
 
             <button
               onClick={() => setShowExpiredModal(false)}

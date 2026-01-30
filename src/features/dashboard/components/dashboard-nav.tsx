@@ -20,9 +20,9 @@ export function DashboardNav({ authDisabled }: { authDisabled: boolean }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-xl border border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/55"
+          className="h-9 w-9 rounded-xl border cursor-pointer border-white/10 bg-black/40 backdrop-blur-md hover:bg-black/55"
         >
-          <Menu className="h-5 w-5 text-white/80" />
+          <Menu className="h-5 w-5 text-white/80 " />
         </Button>
       </SheetTrigger>
 
@@ -31,7 +31,7 @@ export function DashboardNav({ authDisabled }: { authDisabled: boolean }) {
         className="flex flex-col border-white/10 bg-[#0b0b10] p-6 text-white"
       >
         <SheetHeader className="space-y-2">
-          <SheetTitle className="text-white">NAVIGATION</SheetTitle>
+          <SheetTitle className="text-white CURSO">NAVIGATION</SheetTitle>
         </SheetHeader>
 
         <div className="mt-8 space-y-3">

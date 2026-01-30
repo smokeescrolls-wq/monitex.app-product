@@ -2,14 +2,14 @@ export const IG_FLOW = {
   startCost: 45,
   accelerateCost: 30,
   placeholder: "@username",
-  examples: ["@leonardoalbano", "leonardoalbano", "instagram.com/leonardoalbano"],
+  examples: ["@exemple", "exemple", "instagram.com/exemple"],
   steps: [
-    "Perfil encontrado",
-    "Acessando feed e stories...",
-    "Recuperando dados autorizados...",
-    "Analisando interações...",
-    "Indexando padrões...",
-    "Gerando relatório completo...",
+    "Profile found",
+    "Accessing feed and stories...",
+    "Retrieving authorized data...",
+    "Analyzing interactions...",
+    "Indexing patterns...",
+    "Generating full report...",
   ],
 } as const;
 
