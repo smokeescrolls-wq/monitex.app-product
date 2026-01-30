@@ -12,20 +12,29 @@ function normalize(v: FormDataEntryValue | null) {
 
 function computeShaSign(params: Record<string, string>, passphrase: string) {
   const entries = Object.entries(params)
-    .filter(([k, v]) => k.toLowerCase() !== "sha_sign" && v !== "")
+    .filter(([k, v]) => k.toLowerCase() !== "sha_sign" && k.toLowerCase() !== "shasign" && v !== "")
     .sort(([a], [b]) => a.toUpperCase().localeCompare(b.toUpperCase()));
 
-  const toHash = entries.map(([k, v]) => `${k.toUpperCase()}=${v}`).join(passphrase);
-  return crypto.createHash("sha512").update(toHash, "utf8").digest("hex").toUpperCase();
+  let base = "";
+  for (const [k, v] of entries) {
+    base += `${k.toUpperCase()}=${v}${passphrase}`;
+  }
+
+  return crypto.createHash("sha512").update(base, "utf8").digest("hex").toUpperCase();
 }
 
 function getStableEventId(data: Record<string, string>) {
   const apiMode = data.api_mode || "live";
   const event = data.event || "unknown";
+
+  const orderId = data.order_id || "";
+  const productId = data.product_id || "";
+  const paySeq = data.pay_sequence_no || "";
+
   const base =
+    [orderId, productId, paySeq].filter(Boolean).join(":") ||
     data.transaction_id ||
     data.payment_id ||
-    data.order_id ||
     "";
 
   return base ? `${apiMode}:${event}:${base}` : null;
@@ -39,6 +48,9 @@ function extractUserId(data: Record<string, string>) {
   const subid = (data.subid || "").trim();
   if (subid.startsWith("userId:")) return subid.slice("userId:".length).trim();
   if (subid) return subid;
+
+  const uid = (data.uid || "").trim();
+  if (uid) return uid;
 
   return null;
 }
@@ -57,14 +69,25 @@ export async function POST(req: Request) {
   const data: Record<string, string> = {};
   for (const [k, v] of form.entries()) data[k] = normalize(v);
 
-  const event = data.event;
+  const event = data.event || "";
 
-  if (event === "connection_test") return new NextResponse("OK", { status: 200 });
+  if (event === "connection_test") {
+    console.log("D24 connection_test", data);
+    return new NextResponse("OK", { status: 200 });
+  }
 
-  const receivedSign = (data.sha_sign || "").toUpperCase();
+  const receivedSign = (data.sha_sign || (data as any).SHASIGN || "").toUpperCase();
   const expectedSign = computeShaSign(data, passphrase);
 
   if (!receivedSign || receivedSign !== expectedSign) {
+    console.log("D24 invalid_signature", {
+      event,
+      order_id: data.order_id,
+      product_id: data.product_id,
+      pay_sequence_no: data.pay_sequence_no,
+      receivedSign,
+      expectedSign,
+    });
     return new NextResponse("invalid_signature", { status: 401 });
   }
 
@@ -123,5 +146,9 @@ export async function POST(req: Request) {
     });
   });
 
+  return new NextResponse("OK", { status: 200 });
+}
+
+export async function GET() {
   return new NextResponse("OK", { status: 200 });
 }
