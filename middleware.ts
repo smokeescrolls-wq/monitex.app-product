@@ -50,14 +50,7 @@ function isProtectedPath(pathname: string) {
   if (pathname === "/favicon.ico") return false;
   if (pathname === "/mobile-only") return false;
 
-  return (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/analysis") ||
-    pathname.startsWith("/direct") ||
-    pathname.startsWith("/feed") ||
-    pathname.startsWith("/camera") ||
-    pathname.startsWith("/plans")
-  );
+  return pathname.startsWith("/dashboard");
 }
 
 export async function middleware(req: NextRequest) {

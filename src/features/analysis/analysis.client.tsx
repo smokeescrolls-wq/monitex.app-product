@@ -117,7 +117,7 @@ export default function AnalysisClient() {
     }
 
     if (!okToSearch) {
-      router.push("/plans");
+      router.push("/cta");
       return;
     }
 
