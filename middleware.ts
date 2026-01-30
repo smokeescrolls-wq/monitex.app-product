@@ -56,6 +56,10 @@ function isProtectedPath(pathname: string) {
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
+  if (pathname === "/api/webhooks/digistore24" || pathname.startsWith("/api/webhooks/digistore24/")) {
+    return NextResponse.next();
+  }
+
   const mobileOnly = (process.env.MOBILE_ONLY ?? "false").toLowerCase() === "true";
   const isBypass =
     pathname.startsWith("/api") ||
@@ -78,8 +82,6 @@ export async function middleware(req: NextRequest) {
   if (authDisabled) {
     return applySecurityHeaders(response, req);
   }
-
-
 
   if (isProtectedPath(pathname)) {
     const { data } = await supabase.auth.getUser();
