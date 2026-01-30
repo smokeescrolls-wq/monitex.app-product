@@ -648,11 +648,10 @@ export default function CtaClient() {
             </div>
           </div>
         </div>
-
         <div className="w-full px-6 mb-8 stomp-animation stomp-delay-11">
-          <button
-            onClick={goToCheckout}
-            className="w-full bg-gradient-to-br from-[#8b5cf6] cursor-pointer to-[#6d28d9] rounded-2xl p-1 shadow-[0_0_20px_rgba(139,92,246,0.5)] group transform transition hover:scale-[1.02]"
+          <a
+            href="https://trk.ozemgummy.com/click?tid=SEU_TID&subid={SUBID}"
+            className="block w-full bg-gradient-to-br from-[#8b5cf6] cursor-pointer to-[#6d28d9] rounded-2xl p-1 shadow-[0_0_20px_rgba(139,92,246,0.5)] group transform transition hover:scale-[1.02]"
           >
             <div className="bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] rounded-[14px] py-4 px-6 flex flex-col items-center">
               <span className="text-md font-bold text-white mb-1">
@@ -662,7 +661,7 @@ export default function CtaClient() {
                 Access unlocked in up to 2 minutes
               </span>
             </div>
-          </button>
+          </a>
         </div>
 
         <div className="mb-6 animate-bounce stomp-animation stomp-delay-12">
